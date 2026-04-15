@@ -678,4 +678,4 @@ SELECT * FROM orders WHERE MONTH(order_date) = MONTH(GETDATE());
 
 *Devanshi · Self-taught via W3Schools & GeeksforGeeks · Toronto, Canada*
 *GitHub: [github.com/Devanshi-20](https://github.com/Devanshi-20)*
-*Part of the Enterprise Sales Intelligence Platform portfolio project*
+
