@@ -1,8 +1,5 @@
 # SQL Cheat Sheet
 
-> **Self-taught** · MySQL & SQL Server · W3Schools + GeeksforGeeks
-> Devanshi | Toronto, Canada | github.com/Devanshi-20
-
 ---
 
 ## Table of Contents
@@ -673,9 +670,9 @@ SELECT * FROM orders WHERE MONTH(order_date) = MONTH(GETDATE());
 |---|---|
 | [W3Schools SQL](https://www.w3schools.com/sql/) | Learning syntax with live examples |
 | [GeeksforGeeks SQL](https://www.geeksforgeeks.org/sql-tutorial/) | Understanding why things work |
-| [SQLZoo](https://sqlzoo.net/) | Interactive practice exercises |
+| [SQLHacker](https://www.hackerrank.com/domains/sql) | Interactive practice exercises |
 | [LeetCode SQL](https://leetcode.com/problemset/database/) | Interview-style questions |
-| [DB Fiddle](https://dbfiddle.uk/) | Free browser SQL playground — MySQL + SQL Server |
+
 
 ---
 
