@@ -1,0 +1,1658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SQL Mastery in 15 Days</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Fira+Code:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#06080f;
+  --bg2:#0c1120;
+  --bg3:#111827;
+  --card:#0e1628;
+  --cyan:#00d4ff;
+  --green:#00ff88;
+  --pink:#ff2060;
+  --yellow:#ffe54c;
+  --purple:#c084fc;
+  --text:#e2e8f0;
+  --muted:#64748b;
+  --border:#1e3a5f;
+  --glow-cyan:0 0 20px rgba(0,212,255,0.4);
+  --glow-green:0 0 20px rgba(0,255,136,0.4);
+  --glow-pink:0 0 20px rgba(255,32,96,0.4);
+}
+body{font-family:'Syne',sans-serif;background:var(--bg);color:var(--text);line-height:1.6;overflow-x:hidden;min-height:100vh;}
+
+/* ── BG GRID ── */
+body::before{content:'';position:fixed;inset:0;background-image:
+  linear-gradient(rgba(0,212,255,0.03) 1px,transparent 1px),
+  linear-gradient(90deg,rgba(0,212,255,0.03) 1px,transparent 1px);
+  background-size:60px 60px;pointer-events:none;z-index:0;}
+body::after{content:'';position:fixed;inset:0;
+  background:radial-gradient(ellipse 80% 60% at 50% -10%,rgba(0,212,255,0.07),transparent),
+             radial-gradient(ellipse 50% 40% at 90% 80%,rgba(0,255,136,0.05),transparent),
+             radial-gradient(ellipse 50% 40% at 10% 70%,rgba(192,132,252,0.04),transparent);
+  pointer-events:none;z-index:0;}
+
+.wrap{position:relative;z-index:1;max-width:1300px;margin:0 auto;padding:2rem 1.5rem;}
+
+/* ── HEADER ── */
+.hdr{text-align:center;padding:4rem 0 3rem;position:relative;}
+.hdr-badge{display:inline-block;font-family:'Fira Code',monospace;font-size:.75rem;
+  color:var(--cyan);border:1px solid rgba(0,212,255,0.3);
+  background:rgba(0,212,255,0.07);padding:.35rem 1rem;border-radius:20px;
+  margin-bottom:1.5rem;letter-spacing:.15em;text-transform:uppercase;}
+h1{font-size:clamp(2.5rem,6vw,5rem);font-weight:800;line-height:1;
+  background:linear-gradient(135deg,var(--cyan) 0%,var(--green) 50%,var(--purple) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  margin-bottom:1rem;animation:fadeDown .8s ease both;}
+.hdr-sub{color:var(--muted);font-size:1.1rem;font-family:'Fira Code',monospace;
+  margin-bottom:2.5rem;animation:fadeUp .8s ease .2s both;}
+
+/* ── PROGRESS TRACKER ── */
+.tracker{background:var(--card);border:1px solid var(--border);border-radius:20px;
+  padding:2rem;max-width:900px;margin:0 auto 3rem;
+  box-shadow:0 0 40px rgba(0,212,255,0.06);animation:fadeUp .8s ease .3s both;}
+.tracker-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;}
+.tracker-top h3{font-size:1rem;letter-spacing:.1em;text-transform:uppercase;color:var(--cyan);}
+#prog-label{font-family:'Fira Code',monospace;font-size:.85rem;color:var(--green);}
+.prog-rail{background:var(--bg3);border-radius:50px;height:8px;overflow:hidden;margin-bottom:1.5rem;border:1px solid var(--border);}
+#prog-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--cyan),var(--green));border-radius:50px;transition:width .5s cubic-bezier(.4,0,.2,1);box-shadow:var(--glow-cyan);}
+.day-dots{display:grid;grid-template-columns:repeat(15,1fr);gap:.6rem;}
+.dot{aspect-ratio:1;border-radius:50%;background:var(--bg3);border:2px solid var(--border);
+  display:flex;align-items:center;justify-content:center;font-size:.72rem;
+  font-weight:600;cursor:pointer;transition:all .25s ease;color:var(--muted);
+  font-family:'Fira Code',monospace;position:relative;}
+.dot:hover{border-color:var(--cyan);color:var(--cyan);transform:scale(1.15);box-shadow:var(--glow-cyan);}
+.dot.done{background:linear-gradient(135deg,var(--cyan),var(--green));border-color:var(--cyan);color:#000;font-size:.8rem;box-shadow:var(--glow-cyan);}
+.dot-tip{position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);
+  background:#1e293b;border:1px solid var(--border);color:var(--text);
+  font-size:.7rem;white-space:nowrap;padding:.3rem .6rem;border-radius:6px;
+  pointer-events:none;opacity:0;transition:opacity .2s;z-index:10;font-family:'Fira Code',monospace;}
+.dot:hover .dot-tip{opacity:1;}
+.tracker-hint{text-align:center;font-size:.75rem;color:var(--muted);margin-top:1rem;font-family:'Fira Code',monospace;}
+
+/* ── TABS ── */
+.tabs{display:flex;gap:.75rem;flex-wrap:wrap;margin-bottom:2.5rem;}
+.tab{background:var(--card);border:1px solid var(--border);color:var(--muted);
+  padding:.65rem 1.4rem;border-radius:10px;cursor:pointer;font-family:'Syne',sans-serif;
+  font-weight:600;font-size:.9rem;transition:all .25s ease;}
+.tab:hover{border-color:var(--cyan);color:var(--cyan);}
+.tab.on{background:linear-gradient(135deg,rgba(0,212,255,0.15),rgba(0,255,136,0.1));
+  border-color:var(--cyan);color:var(--cyan);box-shadow:var(--glow-cyan);}
+.pane{display:none;animation:fadeUp .4s ease both;}
+.pane.on{display:block;}
+
+/* ── SECTION HEADER ── */
+.sec-hdr{display:flex;align-items:center;gap:1.2rem;padding:1.5rem 2rem;
+  background:var(--card);border:1px solid var(--border);border-radius:14px;
+  margin-bottom:2rem;border-left:4px solid var(--cyan);}
+.sec-num{font-size:2.5rem;font-weight:800;font-family:'Fira Code',monospace;
+  background:linear-gradient(135deg,var(--cyan),var(--green));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.sec-info h2{font-size:1.6rem;font-weight:700;margin-bottom:.25rem;}
+.sec-info p{color:var(--muted);font-size:.9rem;}
+
+/* ── DAY CARD ── */
+.day-card{background:var(--card);border:1px solid var(--border);border-radius:16px;
+  padding:2rem;margin-bottom:2rem;position:relative;overflow:hidden;
+  transition:border-color .3s,box-shadow .3s;}
+.day-card::after{content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(0,212,255,0.03),transparent);
+  pointer-events:none;}
+.day-card:hover{border-color:rgba(0,212,255,0.4);box-shadow:0 4px 30px rgba(0,212,255,0.08);}
+.day-card.highlight-day{border-color:var(--green);box-shadow:0 0 30px rgba(0,255,136,0.15);animation:pulse-border 2s ease 3;}
+@keyframes pulse-border{0%,100%{box-shadow:0 0 30px rgba(0,255,136,0.15)}50%{box-shadow:0 0 50px rgba(0,255,136,0.4)}}
+.day-hdr{display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem;}
+.day-badge{font-family:'Fira Code',monospace;font-size:.78rem;font-weight:500;
+  background:linear-gradient(135deg,var(--cyan),var(--purple));color:#000;
+  padding:.4rem .9rem;border-radius:20px;letter-spacing:.05em;}
+.day-title{font-size:1.35rem;font-weight:700;}
+.mark-btn{margin-left:auto;background:transparent;border:1px solid var(--border);
+  color:var(--muted);padding:.35rem .9rem;border-radius:8px;cursor:pointer;
+  font-family:'Fira Code',monospace;font-size:.75rem;transition:all .25s;}
+.mark-btn:hover{border-color:var(--green);color:var(--green);}
+.mark-btn.done{background:rgba(0,255,136,0.1);border-color:var(--green);color:var(--green);}
+
+/* ── TOPIC GRID ── */
+.topics{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1.2rem;margin:1.2rem 0;}
+.topic{background:var(--bg3);border:1px solid var(--border);border-radius:12px;
+  padding:1.2rem;transition:all .25s;}
+.topic:hover{border-color:rgba(0,212,255,0.35);transform:translateY(-2px);}
+.t-ico{font-size:1.4rem;margin-bottom:.6rem;}
+.t-name{font-weight:700;font-size:1rem;color:var(--cyan);margin-bottom:.4rem;}
+.t-desc{color:var(--muted);font-size:.85rem;line-height:1.5;}
+
+/* ── CODE BLOCK ── */
+.code{background:#070d1a;border:1px solid var(--border);border-radius:10px;
+  padding:1.2rem 1.4rem;margin:1.2rem 0;font-family:'Fira Code',monospace;
+  font-size:.85rem;overflow-x:auto;position:relative;}
+.code::before{content:'SQL';position:absolute;top:.5rem;right:.75rem;
+  font-size:.65rem;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;}
+.code code{color:#a0c4e8;}
+.kw{color:#00d4ff;font-weight:600;}
+.str{color:#00ff88;}
+.cmt{color:#3d5a7a;font-style:italic;}
+.fn{color:#c084fc;}
+
+/* ── CALLOUT ── */
+.callout{background:var(--bg3);border-left:3px solid var(--yellow);border-radius:0 10px 10px 0;
+  padding:1.2rem 1.4rem;margin:1.2rem 0;}
+.callout h4{color:var(--yellow);font-size:.9rem;margin-bottom:.75rem;letter-spacing:.05em;text-transform:uppercase;}
+.callout ul{padding-left:1.4rem;color:var(--muted);}
+.callout li{margin-bottom:.4rem;font-size:.9rem;}
+
+/* ── TABLE ── */
+.ftbl{width:100%;border-collapse:collapse;margin:1rem 0;}
+.ftbl th{padding:.8rem 1rem;text-align:left;border-bottom:2px solid var(--border);
+  color:var(--cyan);font-size:.82rem;text-transform:uppercase;letter-spacing:.08em;background:var(--bg3);}
+.ftbl td{padding:.75rem 1rem;border-bottom:1px solid var(--border);font-size:.85rem;color:var(--text);}
+.ftbl tr:hover td{background:rgba(0,212,255,0.03);}
+.fn-name{color:var(--green);font-family:'Fira Code',monospace;font-weight:500;}
+.inline-code{color:var(--purple);font-family:'Fira Code',monospace;font-size:.82rem;}
+
+/* ── JOIN ANIMATION ── */
+.join-arena{background:var(--bg3);border-radius:14px;padding:2rem;margin:1.5rem 0;}
+.join-arena-title{text-align:center;color:var(--cyan);font-weight:700;font-size:1.05rem;
+  margin-bottom:2rem;letter-spacing:.08em;text-transform:uppercase;}
+.join-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:2rem;}
+.join-item{display:flex;flex-direction:column;align-items:center;gap:1rem;}
+.join-item h5{color:var(--cyan);font-size:.9rem;letter-spacing:.08em;text-transform:uppercase;}
+.venn{position:relative;width:160px;height:100px;}
+.v-circle{position:absolute;width:90px;height:90px;border-radius:50%;top:5px;opacity:.85;}
+.v-a{left:0;border:2px solid var(--cyan);background:rgba(0,212,255,0.12);}
+.v-b{right:0;border:2px solid var(--purple);background:rgba(192,132,252,0.12);}
+.v-label{position:absolute;font-family:'Fira Code',monospace;font-size:.65rem;font-weight:600;top:50%;transform:translateY(-50%);}
+.v-la{left:12px;color:var(--cyan);}
+.v-lb{right:12px;color:var(--purple);}
+.v-mid{position:absolute;left:50%;transform:translateX(-50%);width:38px;height:90px;top:5px;border-radius:0;overflow:hidden;}
+.join-desc{font-size:.78rem;color:var(--muted);text-align:center;font-family:'Fira Code',monospace;}
+/* Animations */
+@keyframes glow-inner{0%,100%{opacity:.2}50%{opacity:1}}
+@keyframes glow-left{0%,100%{opacity:.4}50%{opacity:.95}}
+@keyframes glow-right{0%,100%{opacity:.4}50%{opacity:.95}}
+@keyframes glow-both{0%,100%{opacity:.3}50%{opacity:.9}}
+.anim-inner .v-mid{background:rgba(0,255,136,0.7);animation:glow-inner 2s ease-in-out infinite;}
+.anim-left .v-a{animation:glow-left 2s ease-in-out infinite;}
+.anim-left .v-mid{background:rgba(0,212,255,0.5);animation:glow-left 2s ease-in-out infinite;}
+.anim-right .v-b{animation:glow-right 2s ease-in-out infinite;}
+.anim-right .v-mid{background:rgba(192,132,252,0.5);animation:glow-right 2s ease-in-out infinite;}
+.anim-full .v-a{animation:glow-both 2s ease-in-out infinite;}
+.anim-full .v-b{animation:glow-both 2s ease-in-out .2s infinite;}
+.anim-full .v-mid{background:rgba(0,255,136,0.6);animation:glow-both 2s ease-in-out .1s infinite;}
+.anim-union .v-a{animation:glow-both 1.5s ease-in-out infinite;}
+.anim-union .v-b{animation:glow-both 1.5s ease-in-out .3s infinite;}
+.anim-union .v-mid{background:rgba(255,229,76,0.6);animation:glow-both 1.5s ease-in-out .15s infinite;}
+
+/* ── UNION VISUAL ── */
+.union-vis{background:var(--bg3);border-radius:12px;padding:1.5rem;margin:1.2rem 0;}
+.union-vis h4{color:var(--yellow);font-size:.9rem;text-transform:uppercase;letter-spacing:.08em;margin-bottom:1rem;}
+.union-compare{display:grid;grid-template-columns:1fr auto 1fr;gap:1.5rem;align-items:center;}
+.union-table{font-family:'Fira Code',monospace;font-size:.8rem;}
+.union-table table{width:100%;border-collapse:collapse;}
+.union-table th{padding:.4rem .7rem;background:rgba(0,212,255,0.1);color:var(--cyan);font-size:.75rem;border:1px solid var(--border);}
+.union-table td{padding:.35rem .7rem;border:1px solid var(--border);color:var(--text);}
+.union-table .dup{background:rgba(255,32,96,0.1);color:var(--pink);}
+.union-arrow{font-size:1.8rem;color:var(--yellow);text-align:center;}
+
+/* ── QUIZ ── */
+.quiz-wrap{margin-top:2rem;border-top:1px solid var(--border);padding-top:1.5rem;}
+.quiz-toggle{display:flex;align-items:center;gap:.75rem;cursor:pointer;
+  color:var(--yellow);font-weight:600;font-size:.9rem;letter-spacing:.05em;
+  text-transform:uppercase;user-select:none;}
+.quiz-toggle svg{transition:transform .3s;}
+.quiz-toggle.open svg{transform:rotate(180deg);}
+.quiz-body{display:none;margin-top:1.5rem;}
+.quiz-body.open{display:block;animation:fadeUp .3s ease both;}
+.quiz-q{margin-bottom:1.5rem;}
+.quiz-q p{font-weight:600;font-size:.9rem;margin-bottom:.85rem;color:var(--text);}
+.options{display:flex;flex-direction:column;gap:.5rem;}
+.opt{background:var(--bg3);border:1px solid var(--border);border-radius:8px;
+  padding:.65rem 1rem;cursor:pointer;font-size:.85rem;color:var(--muted);
+  font-family:'Fira Code',monospace;transition:all .2s;text-align:left;}
+.opt:hover:not(.locked){border-color:var(--cyan);color:var(--cyan);}
+.opt.correct{border-color:var(--green);background:rgba(0,255,136,0.1);color:var(--green);}
+.opt.wrong{border-color:var(--pink);background:rgba(255,32,96,0.1);color:var(--pink);}
+.opt.locked{cursor:default;}
+.quiz-exp{margin-top:.75rem;font-size:.82rem;color:var(--muted);padding:.75rem 1rem;
+  background:var(--bg3);border-radius:8px;border-left:3px solid var(--cyan);display:none;}
+.quiz-exp.show{display:block;animation:fadeUp .3s ease both;}
+.quiz-reset{margin-top:1rem;background:transparent;border:1px solid var(--border);
+  color:var(--muted);padding:.45rem 1rem;border-radius:8px;cursor:pointer;
+  font-family:'Fira Code',monospace;font-size:.78rem;transition:all .2s;}
+.quiz-reset:hover{border-color:var(--cyan);color:var(--cyan);}
+.score-badge{display:inline-block;font-family:'Fira Code',monospace;font-size:.78rem;
+  padding:.3rem .8rem;border-radius:20px;margin-left:.75rem;font-weight:600;}
+.score-pass{background:rgba(0,255,136,0.15);color:var(--green);border:1px solid var(--green);}
+.score-fail{background:rgba(255,32,96,0.1);color:var(--pink);border:1px solid var(--pink);}
+
+/* ── OVERVIEW CARDS ── */
+.ov-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1.5rem;margin:2rem 0;}
+.ov-card{background:var(--card);border:1px solid var(--border);border-radius:14px;
+  padding:1.5rem;transition:all .3s;cursor:pointer;}
+.ov-card:hover{border-color:var(--cyan);box-shadow:var(--glow-cyan);transform:translateY(-4px);}
+.ov-ico{font-size:2rem;margin-bottom:.75rem;}
+.ov-title{font-size:1.1rem;font-weight:700;color:var(--cyan);margin-bottom:.5rem;}
+.ov-desc{color:var(--muted);font-size:.88rem;line-height:1.5;}
+.roadmap{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-top:1.5rem;}
+.road-step{background:var(--bg3);border:1px dashed var(--border);border-radius:10px;
+  padding:1rem;font-size:.85rem;color:var(--muted);}
+.road-step strong{color:var(--cyan);display:block;margin-bottom:.3rem;}
+
+/* ── ANIMS ── */
+@keyframes fadeDown{from{opacity:0;transform:translateY(-24px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:6px;height:6px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+::-webkit-scrollbar-thumb:hover{background:var(--cyan);}
+
+@media(max-width:700px){
+  .day-dots{grid-template-columns:repeat(5,1fr);}
+  .join-grid{grid-template-columns:1fr 1fr;}
+  .union-compare{grid-template-columns:1fr;gap:.75rem;}
+  .union-arrow{transform:rotate(90deg);}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- HEADER -->
+  <div class="hdr">
+    <div class="hdr-badge">// Interactive Learning System</div>
+    <h1>SQL MASTERY</h1>
+    <p class="hdr-sub">&gt; 15-day structured path from zero to production-ready _</p>
+  </div>
+
+  <!-- PROGRESS TRACKER -->
+  <div class="tracker">
+    <div class="tracker-top">
+      <h3>Progress Tracker</h3>
+      <span id="prog-label">0 / 15 complete</span>
+    </div>
+    <div class="prog-rail"><div id="prog-fill"></div></div>
+    <div class="day-dots" id="dots-grid"></div>
+    <p class="tracker-hint">// click a day to mark complete &amp; jump to topic</p>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab on" onclick="switchTab('overview',this)">📋 Overview</button>
+    <button class="tab" onclick="switchTab('week1',this)">🔰 Week 1: Basics</button>
+    <button class="tab" onclick="switchTab('week2',this)">🚀 Week 2: Advanced</button>
+    <button class="tab" onclick="switchTab('refs',this)">⚡ Function Ref</button>
+  </div>
+
+  <!-- ══════════ OVERVIEW ══════════ -->
+  <div id="overview" class="pane on">
+    <div class="sec-hdr">
+      <div class="sec-num">00</div>
+      <div class="sec-info"><h2>Learning Roadmap</h2><p>Click any card to jump to that week's content</p></div>
+    </div>
+    <div class="ov-grid">
+      <div class="ov-card" onclick="switchTab('week1',document.querySelectorAll('.tab')[1])">
+        <div class="ov-ico">🔰</div>
+        <div class="ov-title">Week 1 · Foundations</div>
+        <div class="ov-desc">SELECT, INSERT, UPDATE, DELETE, operators, wildcards, regex, aggregates, JOINs, UNION, CASE</div>
+      </div>
+      <div class="ov-card" onclick="switchTab('week2',document.querySelectorAll('.tab')[2])">
+        <div class="ov-ico">🚀</div>
+        <div class="ov-title">Week 2 · Advanced</div>
+        <div class="ov-desc">String/Date/Numeric functions, subqueries, PIVOT, CTEs, recursive CTEs, window functions, best practices</div>
+      </div>
+      <div class="ov-card" onclick="switchTab('refs',document.querySelectorAll('.tab')[3])">
+        <div class="ov-ico">⚡</div>
+        <div class="ov-title">Function Reference</div>
+        <div class="ov-desc">Complete cheatsheet for string, date, numeric and aggregate functions with examples</div>
+      </div>
+      <div class="ov-card">
+        <div class="ov-ico">🧠</div>
+        <div class="ov-title">Built-in Quizzes</div>
+        <div class="ov-desc">Every day has a quiz — open the Quiz section at the bottom of each day card to test yourself</div>
+      </div>
+    </div>
+    <div class="callout">
+      <h4>🔥 Pro Tips</h4>
+      <ul>
+        <li>Use a live playground: <span class="inline-code">sqlfiddle.com</span> or <span class="inline-code">sqliteonline.com</span></li>
+        <li>Mark each day complete after finishing the quiz — track your streak!</li>
+        <li>CTEs and window functions (Days 13-14) are the most-asked interview topics</li>
+        <li>Build one mini project per week to reinforce all concepts</li>
+        <li>Always test UPDATE/DELETE with a SELECT first</li>
+      </ul>
+    </div>
+    <div class="roadmap">
+      <div class="road-step"><strong>Days 1-3</strong>Core SQL &amp; CRUD operations</div>
+      <div class="road-step"><strong>Days 4-5</strong>Operators, wildcards &amp; regex</div>
+      <div class="road-step"><strong>Days 6-7</strong>Aggregates, JOINs &amp; UNION</div>
+      <div class="road-step"><strong>Days 8-10</strong>Built-in functions library</div>
+      <div class="road-step"><strong>Days 11-12</strong>Subqueries &amp; PIVOT</div>
+      <div class="road-step"><strong>Days 13-14</strong>CTEs &amp; window functions</div>
+      <div class="road-step"><strong>Day 15</strong>Optimization &amp; best practices</div>
+    </div>
+  </div>
+
+  <!-- ══════════ WEEK 1 ══════════ -->
+  <div id="week1" class="pane">
+    <div class="sec-hdr">
+      <div class="sec-num">W1</div>
+      <div class="sec-info"><h2>Week 1 · SQL Fundamentals</h2><p>Build a solid foundation with core database operations</p></div>
+    </div>
+
+    <!-- DAY 1 -->
+    <div class="day-card" id="day-1">
+      <div class="day-hdr">
+        <span class="day-badge">Day 01</span>
+        <h3 class="day-title">What is SQL &amp; Database Basics</h3>
+        <button class="mark-btn" onclick="markDay(1,this)">Mark Complete ✓</button>
+      </div>
+      <div class="topics">
+        <div class="topic"><div class="t-ico">🗄️</div><div class="t-name">What is SQL</div><div class="t-desc">Structured Query Language — the universal standard for managing relational databases</div></div>
+        <div class="topic"><div class="t-ico">📊</div><div class="t-name">Key Concepts</div><div class="t-desc">Tables, Rows, Columns, Primary Key, Foreign Key, Relationships, Schemas</div></div>
+        <div class="topic"><div class="t-ico">🎯</div><div class="t-name">SQL Categories</div><div class="t-desc">DDL (CREATE/ALTER/DROP), DML (SELECT/INSERT/UPDATE/DELETE), DCL, TCL</div></div>
+      </div>
+      <div class="code"><code><span class="cmt">-- Your First SQL Query</span>
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> customers;
+
+<span class="cmt">-- Create a Table (DDL)</span>
+<span class="kw">CREATE TABLE</span> employees (
+    id       <span class="kw">INT PRIMARY KEY</span>,
+    name     <span class="kw">VARCHAR</span>(100) <span class="kw">NOT NULL</span>,
+    dept_id  <span class="kw">INT</span>,
+    salary   <span class="kw">DECIMAL</span>(10,2),
+    <span class="kw">FOREIGN KEY</span> (dept_id) <span class="kw">REFERENCES</span> departments(id)
+);</code></div>
+      <div class="quiz-wrap">
+        <div class="quiz-toggle" onclick="toggleQuiz(this)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          🧠 Quiz — Day 1 &nbsp;<span class="score-badge" id="score-1" style="display:none"></span>
+        </div>
+        <div class="quiz-body" data-day="1">
+          <div class="quiz-q" data-ans="b">
+            <p>1. What does DDL stand for in SQL?</p>
+            <div class="options">
+              <button class="opt" onclick="answer(this,'b')">A) Data Display Language</button>
+              <button class="opt" onclick="answer(this,'b')">B) Data Definition Language</button>
+              <button class="opt" onclick="answer(this,'b')">C) Dynamic Data Language</button>
+              <button class="opt" onclick="answer(this,'b')">D) Data Deletion Logic</button>
+            </div>
+            <div class="quiz-exp">DDL (Data Definition Language) includes commands that define or modify database structure: CREATE, ALTER, DROP, TRUNCATE.</div>
+          </div>
+          <div class="quiz-q" data-ans="c">
+            <p>2. A <strong>Primary Key</strong> in a table must be…</p>
+            <div class="options">
+              <button class="opt" onclick="answer(this,'c')">A) A text column</button>
+              <button class="opt" onclick="answer(this,'c')">B) Nullable and unique</button>
+              <button class="opt" onclick="answer(this,'c')">C) Unique and NOT NULL</button>
+              <button class="opt" onclick="answer(this,'c')">D) An auto-increment integer only</button>
+            </div>
+            <div class="quiz-exp">A Primary Key uniquely identifies each row and cannot be NULL. It can be any data type as long as the values are unique.</div>
+          </div>
+          <div class="quiz-q" data-ans="a">
+            <p>3. Which command belongs to DML?</p>
+            <div class="options">
+              <button class="opt" onclick="answer(this,'a')">A) INSERT INTO</button>
+              <button class="opt" onclick="answer(this,'a')">B) CREATE TABLE</button>
+              <button class="opt" onclick="answer(this,'a')">C) DROP TABLE</button>
+              <button class="opt" onclick="answer(this,'a')">D) GRANT SELECT</button>
+            </div>
+            <div class="quiz-exp">DML (Data Manipulation Language) manipulates data: SELECT, INSERT, UPDATE, DELETE. CREATE and DROP are DDL; GRANT is DCL.</div>
+          </div>
+          <button class="quiz-reset" onclick="resetQuiz(this)">↺ Reset Quiz</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- DAY 2 -->
+    <div class="day-card" id="day-2">
+      <div class="day-hdr">
+        <span class="day-badge">Day 02</span>
+        <h3 class="day-title">SELECT Statement Mastery</h3>
+        <button class="mark-btn" onclick="markDay(2,this)">Mark Complete ✓</button>
+      </div>
+      <div class="callout">
+        <h4>📌 Clause Execution Order</h4>
+        <p style="font-family:'Fira Code',monospace;color:var(--cyan);font-size:.85rem;">FROM → WHERE → GROUP BY → HAVING → SELECT → ORDER BY → LIMIT</p>
+      </div>
+      <div class="code"><code><span class="cmt">-- Basic SELECT</span>
+<span class="kw">SELECT</span> first_name, last_name, salary <span class="kw">FROM</span> employees;
+
+<span class="cmt">-- Filter rows with WHERE</span>
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> employees <span class="kw">WHERE</span> salary &gt; 50000;
+
+<span class="cmt">-- Sort results</span>
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> products <span class="kw">ORDER BY</span> price <span class="kw">DESC</span>;
+
+<span class="cmt">-- Limit results</span>
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> orders <span class="kw">ORDER BY</span> created_at <span class="kw">DESC LIMIT</span> 10;
+
+<span class="cmt">-- Remove duplicates</span>
+<span class="kw">SELECT DISTINCT</span> country <span class="kw">FROM</span> customers;
+
+<span class="cmt">-- Aliases</span>
+<span class="kw">SELECT</span> first_name <span class="kw">AS</span> <span class="str">"First Name"</span>, salary * 12 <span class="kw">AS</span> annual_salary <span class="kw">FROM</span> employees;</code></div>
+      <div class="quiz-wrap">
+        <div class="quiz-toggle" onclick="toggleQuiz(this)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          🧠 Quiz — Day 2 &nbsp;<span class="score-badge" id="score-2" style="display:none"></span>
+        </div>
+        <div class="quiz-body" data-day="2">
+          <div class="quiz-q" data-ans="b">
+            <p>1. In what ORDER are SQL clauses evaluated (logically)?</p>
+            <div class="options">
+              <button class="opt" onclick="answer(this,'b')">A) SELECT → FROM → WHERE → ORDER BY</button>
+              <button class="opt" onclick="answer(this,'b')">B) FROM → WHERE → SELECT → ORDER BY</button>
+              <button class="opt" onclick="answer(this,'b')">C) WHERE → FROM → SELECT → ORDER BY</button>
+              <button class="opt" onclick="answer(this,'b')">D) SELECT → WHERE → FROM → LIMIT</button>
+            </div>
+            <div class="quiz-exp">SQL evaluates: FROM (identify table) → WHERE (filter rows) → SELECT (choose columns) → ORDER BY (sort) → LIMIT (restrict count).</div>
+          </div>
+          <div class="quiz-q" data-ans="c">
+            <p>2. Which keyword removes duplicate rows from results?</p>
+            <div class="options">
+              <button class="opt" onclick="answer(this,'c')">A) UNIQUE</button>
+              <button class="opt" onclick="answer(this,'c')">B) FILTER</button>
+              <button class="opt" onclick="answer(this,'c')">C) DISTINCT</button>
+              <button class="opt" onclick="answer(this,'c')">D) DEDUPE</button>
+            </div>
+            <div class="quiz-exp">SELECT DISTINCT column eliminates duplicate rows from the result set. It applies to the entire row, not just one column.</div>
+          </div>
+          <button class="quiz-reset" onclick="resetQuiz(this)">↺ Reset Quiz</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- DAY 3 -->
+    <div class="day-card" id="day-3">
+      <div class="day-hdr">
+        <span class="day-badge">Day 03</span>
+        <h3 class="day-title">INSERT, UPDATE, DELETE Operations</h3>
+        <button class="mark-btn" onclick="markDay(3,this)">Mark Complete ✓</button>
+      </div>
+      <div class="code"><code><span class="cmt">-- INSERT single row</span>
+<span class="kw">INSERT INTO</span> employees (id, name, salary)
+<span class="kw">VALUES</span> (1, <span class="str">'Ada Lovelace'</span>, 95000);
+
+<span class="cmt">-- INSERT multiple rows</span>
+<span class="kw">INSERT INTO</span> employees (id, name, salary) <span class="kw">VALUES</span>
+    (2, <span class="str">'Grace Hopper'</span>, 105000),
+    (3, <span class="str">'Alan Turing'</span>, 98000);
+
+<span class="cmt">-- UPDATE with WHERE (always use WHERE!)</span>
+<span class="kw">UPDATE</span> employees
+<span class="kw">SET</span> salary = 110000, dept_id = 3
+<span class="kw">WHERE</span> id = 1;
+
+<span class="cmt">-- DELETE with WHERE (always verify first!)</span>
+<span class="kw">DELETE FROM</span> employees <span class="kw">WHERE</span> id = 3;
+
+<span class="cmt">-- Safe check before delete</span>
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> employees <span class="kw">WHERE</span> id = 3;  <span class="cmt">-- verify</span>
+<span class="kw">DELETE FROM</span> employees <span class="kw">WHERE</span> id = 3;    <span class="cmt">-- then delete</span></code></div>
+      <div class="callout">
+        <h4>⚠️ Safety Rules</h4>
+        <ul>
+          <li>ALWAYS include a WHERE clause with UPDATE and DELETE</li>
+          <li>Test with SELECT first using the same WHERE condition</li>
+          <li>Use transactions (<span class="inline-code">BEGIN / ROLLBACK / COMMIT</span>) for critical changes</li>
+        </ul>
+      </div>
+      <div class="quiz-wrap">
+        <div class="quiz-toggle" onclick="toggleQuiz(this)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          🧠 Quiz — Day 3 &nbsp;<span class="score-badge" id="score-3" style="display:none"></span>
+        </div>
+        <div class="quiz-body" data-day="3">
+          <div class="quiz-q" data-ans="d">
+            <p>1. What happens if you run <code style="color:var(--pink)">DELETE FROM employees;</code> (no WHERE)?</p>
+            <div class="options">
+              <button class="opt" onclick="answer(this,'d')">A) Nothing — WHERE is required</button>
+              <button class="opt" onclick="answer(this,'d')">B) Only the first row is deleted</button>
+              <button class="opt" onclick="answer(this,'d')">C) Returns an error</button>
+              <button class="opt" onclick="answer(this,'d')">D) All rows are deleted</button>
+            </div>
+            <div class="quiz-exp">Without a WHERE clause, DELETE removes ALL rows in the table. The table structure remains but all data is gone — very dangerous!</div>
+          </div>
+          <div class="quiz-q" data-ans="b">
+            <p>2. Which SQL command is used to begin a transaction?</p>
+            <div class="options">
+              <button class="opt" onclick="answer(this,'b')">A) START</button>
+              <button class="opt" onclick="answer(this,'b')">B) BEGIN (or START TRANSACTION)</button>
+              <button class="opt" onclick="answer(this,'b')">C) OPEN TRANSACTION</button>
+              <button class="opt" onclick="answer(this,'b')">D) INIT</button>
+            </div>
+            <div class="quiz-exp">Transactions start with BEGIN (MySQL) or START TRANSACTION. Use COMMIT to save changes, ROLLBACK to undo them.</div>
+          </div>
+          <button class="quiz-reset" onclick="resetQuiz(this)">↺ Reset Quiz</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- DAY 4 -->
+    <div class="day-card" id="day-4">
+      <div class="day-hdr">
+        <span class="day-badge">Day 04</span>
+        <h3 class="day-title">Operators &amp; Wildcards</h3>
+        <button class="mark-btn" onclick="markDay(4,this)">Mark Complete ✓</button>
+      </div>
+      <div class="topics">
+        <div class="topic"><div class="t-ico">🔢</div><div class="t-name">Comparison</div><div class="t-desc">= &nbsp;!= &nbsp;&lt;&gt; &nbsp;&gt; &nbsp;&lt; &nbsp;&gt;= &nbsp;&lt;=</div></div>
+        <div class="topic"><div class="t-ico">🔗</div><div class="t-name">Logical</div><div class="t-desc">AND &nbsp;OR &nbsp;NOT &nbsp;IN &nbsp;BETWEEN &nbsp;LIKE &nbsp;IS NULL</div></div>
+        <div class="topic"><div class="t-ico">🎭</div><div class="t-name">Wildcards</div><div class="t-desc"><code class="inline-code">%</code> = any chars &nbsp;&nbsp; <code class="inline-code">_</code> = single char</div></div>
+      </div>
+      <div class="code"><code><span class="cmt">-- LIKE wildcards</span>
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> customers <span class="kw">WHERE</span> name <span class="kw">LIKE</span> <span class="str">'A%'</span>;      <span class="cmt">-- starts with A</span>
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> products  <span class="kw">WHERE</span> name <span class="kw">LIKE</span> <span class="str">'%phone%'</span>;   <span class="cmt">-- contains "phone"</span>
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> employees <span class="kw">WHERE</span> code <span class="kw">LIKE</span> <span class="str">'A_C'</span>;       <span class="cmt">-- A + any 1 char + C</span>
+
+<span class="cmt">-- BETWEEN (inclusive)</span>
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> orders
+<span class="kw">WHERE</span> order_date <span class="kw">BETWEEN</span> <span class="str">'2024-01-01'</span> <span class="kw">AND</span> <span class="str">'2024-12-31'</span>;
+
+<span class="cmt">-- IN</span>
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> employees
+<span class="kw">WHERE</span> department <span class="kw">IN</span> (<span class="str">'Sales'</span>, <span class="str">'Engineering'</span>, <span class="str">'Marketing'</span>);
+
+<span class="cmt">-- IS NULL / IS NOT NULL</span>
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> customers <span class="kw">WHERE</span> email <span class="kw">IS NULL</span>;</code></div>
+      <div class="quiz-wrap">
+        <div class="quiz-toggle" onclick="toggleQuiz(this)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          🧠 Quiz — Day 4 &nbsp;<span class="score-badge" id="score-4" style="display:none"></span>
+        </div>
+        <div class="quiz-body" data-day="4">
+          <div class="quiz-q" data-ans="c">
+            <p>1. Which pattern matches "cat", "car", "can" but NOT "catch"?</p>
+            <div class="options">
+              <button class="opt" onclick="answer(this,'c')">A) LIKE 'ca%'</button>
+              <button class="opt" onclick="answer(this,'c')">B) LIKE 'ca'</button>
+              <button class="opt" onclick="answer(this,'c')">C) LIKE 'ca_'</button>
+              <button class="opt" onclick="answer(this,'c')">D) LIKE '%ca%'</button>
+            </div>
+            <div class="quiz-exp">The underscore _ matches exactly one character. 'ca_' matches 3-character words starting with "ca" — cat, car, can. 'ca%' would also match "catch".</div>
+          </div>
+          <div class="quiz-q" data-ans="a">
+            <p>2. Does <code style="color:var(--cyan)">BETWEEN 10 AND 20</code> include 10 and 20?</p>
+            <div class="options">
+              <button class="opt" onclick="answer(this,'a')">A) Yes — BETWEEN is inclusive on both ends</button>
+              <button class="opt" onclick="answer(this,'a')">B) No — it excludes both endpoints</button>
+              <button class="opt" onclick="answer(this,'a')">C) Only includes 10 (left-inclusive)</button>
+              <button class="opt" onclick="answer(this,'a')">D) Only includes 20 (right-inclusive)</button>
+            </div>
+            <div class="quiz-exp">BETWEEN x AND y is equivalent to &gt;= x AND &lt;= y — both endpoints are included.</div>
+          </div>
+          <button class="quiz-reset" onclick="resetQuiz(this)">↺ Reset Quiz</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- DAY 5 -->
+    <div class="day-card" id="day-5">
+      <div class="day-hdr">
+        <span class="day-badge">Day 05</span>
+        <h3 class="day-title">REGEXP — Regular Expressions</h3>
+        <button class="mark-btn" onclick="markDay(5,this)">Mark Complete ✓</button>
+      </div>
+      <div class="code"><code><span class="cmt">-- Email validation</span>
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> users <span class="kw">WHERE</span> email <span class="kw">REGEXP</span> <span class="str">'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$'</span>;
+
+<span class="cmt">-- Starts with lowercase letter</span>
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> products <span class="kw">WHERE</span> sku <span class="kw">REGEXP</span> <span class="str">'^[a-z]'</span>;
+
+<span class="cmt">-- Contains exactly 5 digits</span>
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> products <span class="kw">WHERE</span> code <span class="kw">REGEXP</span> <span class="str">'[0-9]{5}'</span>;
+
+<span class="cmt">-- US phone number format</span>
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> contacts <span class="kw">WHERE</span> phone <span class="kw">REGEXP</span> <span class="str">'^\\+1[0-9]{10}$'</span>;</code></div>
+      <div class="callout">
+        <h4>📝 Pattern Quick Ref</h4>
+        <ul>
+          <li><span class="inline-code">^</span> — start &nbsp;&nbsp; <span class="inline-code">$</span> — end &nbsp;&nbsp; <span class="inline-code">.</span> — any char</li>
+          <li><span class="inline-code">*</span> — 0+ &nbsp;&nbsp; <span class="inline-code">+</span> — 1+ &nbsp;&nbsp; <span class="inline-code">?</span> — 0 or 1</li>
+          <li><span class="inline-code">[abc]</span> — any of a,b,c &nbsp;&nbsp; <span class="inline-code">[0-9]</span> — digit &nbsp;&nbsp; <span class="inline-code">{n}</span> — exactly n</li>
+        </ul>
+      </div>
+      <div class="quiz-wrap">
+        <div class="quiz-toggle" onclick="toggleQuiz(this)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          🧠 Quiz — Day 5 &nbsp;<span class="score-badge" id="score-5" style="display:none"></span>
+        </div>
+        <div class="quiz-body" data-day="5">
+          <div class="quiz-q" data-ans="b">
+            <p>1. What does the pattern <code style="color:var(--cyan)">^[0-9]</code> match?</p>
+            <div class="options">
+              <button class="opt" onclick="answer(this,'b')">A) A string ending with a digit</button>
+              <button class="opt" onclick="answer(this,'b')">B) A string starting with a digit</button>
+              <button class="opt" onclick="answer(this,'b')">C) A string containing only digits</button>
+              <button class="opt" onclick="answer(this,'b')">D) A string with no digits</button>
+            </div>
+            <div class="quiz-exp">^ anchors to the start of the string. [0-9] matches a single digit. Together, ^[0-9] means "string that begins with a digit".</div>
+          </div>
+          <div class="quiz-q" data-ans="c">
+            <p>2. Which regex matches strings with EXACTLY 3 characters?</p>
+            <div class="options">
+              <button class="opt" onclick="answer(this,'c')">A) .+</button>
+              <button class="opt" onclick="answer(this,'c')">B) ...</button>
+              <button class="opt" onclick="answer(this,'c')">C) ^.{3}$</button>
+              <button class="opt" onclick="answer(this,'c')">D) [3]</button>
+            </div>
+            <div class="quiz-exp">^.{3}$ — anchors to start/end (^$) and .{3} means exactly 3 of any character. Without anchors, it would match strings containing 3 chars anywhere.</div>
+          </div>
+          <button class="quiz-reset" onclick="resetQuiz(this)">↺ Reset Quiz</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- DAY 6 -->
+    <div class="day-card" id="day-6">
+      <div class="day-hdr">
+        <span class="day-badge">Day 06</span>
+        <h3 class="day-title">Aggregate Functions &amp; GROUP BY</h3>
+        <button class="mark-btn" onclick="markDay(6,this)">Mark Complete ✓</button>
+      </div>
+      <div class="topics">
+        <div class="topic"><div class="t-ico">📊</div><div class="t-name">COUNT()</div><div class="t-desc">Count rows — <code class="inline-code">COUNT(*)</code> counts all, <code class="inline-code">COUNT(col)</code> skips NULLs</div></div>
+        <div class="topic"><div class="t-ico">➕</div><div class="t-name">SUM() / AVG()</div><div class="t-desc">Total and average of numeric columns</div></div>
+        <div class="topic"><div class="t-ico">📈</div><div class="t-name">MAX() / MIN()</div><div class="t-desc">Highest and lowest values, works on text too</div></div>
+        <div class="topic"><div class="t-ico">🔗</div><div class="t-name">GROUP_CONCAT()</div><div class="t-desc">Join grouped values into a single string</div></div>
+      </div>
+      <div class="code"><code><span class="cmt">-- All aggregates at once</span>
+<span class="kw">SELECT</span>
+    <span class="fn">COUNT</span>(*) <span class="kw">AS</span> total,
+    <span class="fn">AVG</span>(salary)  <span class="kw">AS</span> avg_salary,
+    <span class="fn">MAX</span>(salary)  <span class="kw">AS</span> highest,
+    <span class="fn">MIN</span>(salary)  <span class="kw">AS</span> lowest,
+    <span class="fn">SUM</span>(salary)  <span class="kw">AS</span> payroll
+<span class="kw">FROM</span> employees;
+
+<span class="cmt">-- GROUP BY department</span>
+<span class="kw">SELECT</span> department, <span class="fn">COUNT</span>(*) <span class="kw">AS</span> headcount, <span class="fn">AVG</span>(salary) <span class="kw">AS</span> avg_sal
+<span class="kw">FROM</span> employees
+<span class="kw">GROUP BY</span> department;
+
+<span class="cmt">-- HAVING: filter on aggregated results</span>
+<span class="kw">SELECT</span> department, <span class="fn">AVG</span>(salary) <span class="kw">AS</span> avg_sal
+<span class="kw">FROM</span> employees
+<span class="kw">GROUP BY</span> department
+<span class="kw">HAVING</span> <span class="fn">AVG</span>(salary) &gt; 70000;
+
+<span class="cmt">-- GROUP_CONCAT</span>
+<span class="kw">SELECT</span> department, <span class="fn">GROUP_CONCAT</span>(name <span class="kw">ORDER BY</span> name <span class="kw">SEPARATOR</span> <span class="str">', '</span>)
+<span class="kw">FROM</span> employees <span class="kw">GROUP BY</span> department;</code></div>
+      <div class="callout">
+        <h4>💡 WHERE vs HAVING</h4>
+        <ul>
+          <li><strong style="color:var(--cyan)">WHERE</strong> — filters individual rows BEFORE grouping</li>
+          <li><strong style="color:var(--green)">HAVING</strong> — filters groups AFTER aggregation</li>
+          <li>You can use both: <code class="inline-code">WHERE salary &gt; 30k ... HAVING COUNT(*) &gt; 5</code></li>
+        </ul>
+      </div>
+      <div class="quiz-wrap">
+        <div class="quiz-toggle" onclick="toggleQuiz(this)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          🧠 Quiz — Day 6 &nbsp;<span class="score-badge" id="score-6" style="display:none"></span>
+        </div>
+        <div class="quiz-body" data-day="6">
+          <div class="quiz-q" data-ans="b">
+            <p>1. To filter groups where count &gt; 5, you use:</p>
+            <div class="options">
+              <button class="opt" onclick="answer(this,'b')">A) WHERE COUNT(*) &gt; 5</button>
+              <button class="opt" onclick="answer(this,'b')">B) HAVING COUNT(*) &gt; 5</button>
+              <button class="opt" onclick="answer(this,'b')">C) FILTER COUNT(*) &gt; 5</button>
+              <button class="opt" onclick="answer(this,'b')">D) GROUP BY COUNT(*) &gt; 5</button>
+            </div>
+            <div class="quiz-exp">HAVING filters after GROUP BY. You cannot use aggregate functions like COUNT in a WHERE clause — that's what HAVING is for.</div>
+          </div>
+          <div class="quiz-q" data-ans="c">
+            <p>2. What is the difference between COUNT(*) and COUNT(column)?</p>
+            <div class="options">
+              <button class="opt" onclick="answer(this,'c')">A) No difference</button>
+              <button class="opt" onclick="answer(this,'c')">B) COUNT(*) is slower</button>
+              <button class="opt" onclick="answer(this,'c')">C) COUNT(column) ignores NULL values</button>
+              <button class="opt" onclick="answer(this,'c')">D) COUNT(*) only counts distinct rows</button>
+            </div>
+            <div class="quiz-exp">COUNT(*) counts all rows including NULLs. COUNT(column) counts only non-NULL values in that column. This can give very different results!</div>
+          </div>
+          <button class="quiz-reset" onclick="resetQuiz(this)">↺ Reset Quiz</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- DAY 7 -->
+    <div class="day-card" id="day-7">
+      <div class="day-hdr">
+        <span class="day-badge">Day 07</span>
+        <h3 class="day-title">JOINs, UNION &amp; CASE Statements</h3>
+        <button class="mark-btn" onclick="markDay(7,this)">Mark Complete ✓</button>
+      </div>
+
+      <!-- ANIMATED JOIN VENN DIAGRAMS -->
+      <div class="join-arena">
+        <div class="join-arena-title">// Animated JOIN Visualizer</div>
+        <div class="join-grid">
+          <div class="join-item">
+            <h5>INNER JOIN</h5>
+            <div class="venn anim-inner">
+              <div class="v-circle v-a"></div>
+              <div class="v-circle v-b"></div>
+              <div class="v-mid"></div>
+              <span class="v-label v-la">A</span>
+              <span class="v-label v-lb">B</span>
+            </div>
+            <div class="join-desc">Only matching rows</div>
+          </div>
+          <div class="join-item">
+            <h5>LEFT JOIN</h5>
+            <div class="venn anim-left">
+              <div class="v-circle v-a"></div>
+              <div class="v-circle v-b"></div>
+              <div class="v-mid"></div>
+              <span class="v-label v-la">A</span>
+              <span class="v-label v-lb">B</span>
+            </div>
+            <div class="join-desc">All from A + matched B</div>
+          </div>
+          <div class="join-item">
+            <h5>RIGHT JOIN</h5>
+            <div class="venn anim-right">
+              <div class="v-circle v-a"></div>
+              <div class="v-circle v-b"></div>
+              <div class="v-mid"></div>
+              <span class="v-label v-la">A</span>
+              <span class="v-label v-lb">B</span>
+            </div>
+            <div class="join-desc">All from B + matched A</div>
+          </div>
+          <div class="join-item">
+            <h5>FULL OUTER JOIN</h5>
+            <div class="venn anim-full">
+              <div class="v-circle v-a"></div>
+              <div class="v-circle v-b"></div>
+              <div class="v-mid"></div>
+              <span class="v-label v-la">A</span>
+              <span class="v-label v-lb">B</span>
+            </div>
+            <div class="join-desc">All rows from both</div>
+          </div>
+          <div class="join-item">
+            <h5>UNION (set op)</h5>
+            <div class="venn anim-union">
+              <div class="v-circle v-a"></div>
+              <div class="v-circle v-b"></div>
+              <div class="v-mid"></div>
+              <span class="v-label v-la">Q1</span>
+              <span class="v-label v-lb">Q2</span>
+            </div>
+            <div class="join-desc">Stack results, dedupe</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="code"><code><span class="cmt">-- INNER JOIN: only matching rows</span>
+<span class="kw">SELECT</span> e.name, d.dept_name
+<span class="kw">FROM</span> employees e
+<span class="kw">INNER JOIN</span> departments d <span class="kw">ON</span> e.dept_id = d.id;
+
+<span class="cmt">-- LEFT JOIN: all employees even without dept</span>
+<span class="kw">SELECT</span> c.name, o.order_id
+<span class="kw">FROM</span> customers c
+<span class="kw">LEFT JOIN</span> orders o <span class="kw">ON</span> c.id = o.customer_id;
+
+<span class="cmt">-- Self JOIN: find employees and their managers</span>
+<span class="kw">SELECT</span> e.name <span class="kw">AS</span> employee, m.name <span class="kw">AS</span> manager
+<span class="kw">FROM</span> employees e
+<span class="kw">LEFT JOIN</span> employees m <span class="kw">ON</span> e.manager_id = m.id;
+
+<span class="cmt">-- CASE statement: conditional column</span>
+<span class="kw">SELECT</span> name, salary,
+    <span class="kw">CASE</span>
+        <span class="kw">WHEN</span> salary &gt; 100000 <span class="kw">THEN</span> <span class="str">'Senior'</span>
+        <span class="kw">WHEN</span> salary &gt;  60000 <span class="kw">THEN</span> <span class="str">'Mid'</span>
+        <span class="kw">ELSE</span> <span class="str">'Junior'</span>
+    <span class="kw">END</span> <span class="kw">AS</span> grade
+<span class="kw">FROM</span> employees;</code></div>
+
+      <!-- UNION SECTION -->
+      <div class="union-vis">
+        <h4>⚡ UNION &amp; UNION ALL — Stack Result Sets</h4>
+        <div class="union-compare">
+          <div class="union-table">
+            <p style="color:var(--cyan);font-size:.8rem;margin-bottom:.5rem;">Query 1 (customers)</p>
+            <table><tr><th>name</th></tr><tr><td>Alice</td></tr><tr><td>Bob</td></tr><tr><td>Carol</td></tr></table>
+          </div>
+          <div class="union-arrow">⟶</div>
+          <div class="union-table">
+            <p style="color:var(--green);font-size:.8rem;margin-bottom:.5rem;">UNION ALL result</p>
+            <table>
+              <tr><th>name</th></tr>
+              <tr><td>Alice</td></tr>
+              <tr><td>Bob</td></tr>
+              <tr><td>Carol</td></tr>
+              <tr class="dup"><td>Bob ← duplicate kept</td></tr>
+              <tr><td>Dave</td></tr>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="code"><code><span class="cmt">-- UNION: combine results, remove duplicates</span>
+<span class="kw">SELECT</span> name <span class="kw">FROM</span> customers
+<span class="kw">UNION</span>
+<span class="kw">SELECT</span> name <span class="kw">FROM</span> suppliers;
+
+<span class="cmt">-- UNION ALL: keep all rows including duplicates (faster)</span>
+<span class="kw">SELECT</span> name, <span class="str">'customer'</span> <span class="kw">AS</span> type <span class="kw">FROM</span> customers
+<span class="kw">UNION ALL</span>
+<span class="kw">SELECT</span> name, <span class="str">'supplier'</span>            <span class="kw">FROM</span> suppliers;
+
+<span class="cmt">-- Rules: column counts & types must match!</span>
+<span class="cmt">-- Column names taken from FIRST SELECT</span>
+<span class="cmt">-- ORDER BY goes at the very end only</span>
+<span class="kw">SELECT</span> product_name <span class="kw">AS</span> item, price <span class="kw">FROM</span> products
+<span class="kw">UNION</span>
+<span class="kw">SELECT</span> service_name,  rate  <span class="kw">FROM</span> services
+<span class="kw">ORDER BY</span> price <span class="kw">DESC</span>;</code></div>
+      <div class="callout">
+        <h4>🔑 UNION vs JOIN — Key Difference</h4>
+        <ul>
+          <li><strong style="color:var(--cyan)">JOIN</strong> — combines columns horizontally (adds more columns)</li>
+          <li><strong style="color:var(--green)">UNION</strong> — stacks rows vertically (adds more rows)</li>
+          <li><strong style="color:var(--yellow)">UNION</strong> removes duplicates (like DISTINCT) — <strong>slower</strong></li>
+          <li><strong style="color:var(--purple)">UNION ALL</strong> keeps all rows — <strong>faster</strong>, prefer when no duplicates expected</li>
+        </ul>
+      </div>
+      <div class="quiz-wrap">
+        <div class="quiz-toggle" onclick="toggleQuiz(this)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          🧠 Quiz — Day 7 &nbsp;<span class="score-badge" id="score-7" style="display:none"></span>
+        </div>
+        <div class="quiz-body" data-day="7">
+          <div class="quiz-q" data-ans="a">
+            <p>1. Which JOIN returns rows only when BOTH tables have a match?</p>
+            <div class="options">
+              <button class="opt" onclick="answer(this,'a')">A) INNER JOIN</button>
+              <button class="opt" onclick="answer(this,'a')">B) LEFT JOIN</button>
+              <button class="opt" onclick="answer(this,'a')">C) RIGHT JOIN</button>
+              <button class="opt" onclick="answer(this,'a')">D) FULL OUTER JOIN</button>
+            </div>
+            <div class="quiz-exp">INNER JOIN returns only rows where the ON condition matches in BOTH tables. All other JOINs also return unmatched rows from one or both tables.</div>
+          </div>
+          <div class="quiz-q" data-ans="c">
+            <p>2. What is the key difference between UNION and UNION ALL?</p>
+            <div class="options">
+              <button class="opt" onclick="answer(this,'c')">A) UNION ALL is only for numbers</button>
+              <button class="opt" onclick="answer(this,'c')">B) UNION requires same table</button>
+              <button class="opt" onclick="answer(this,'c')">C) UNION removes duplicates; UNION ALL keeps them all</button>
+              <button class="opt" onclick="answer(this,'c')">D) They are identical</button>
+            </div>
+            <div class="quiz-exp">UNION performs a DISTINCT on the combined results (slower). UNION ALL just concatenates all rows without deduplication (faster). Use UNION ALL when you know there are no duplicates or you want them.</div>
+          </div>
+          <div class="quiz-q" data-ans="d">
+            <p>3. For UNION to work, the two SELECT statements must have:</p>
+            <div class="options">
+              <button class="opt" onclick="answer(this,'d')">A) The same table names</button>
+              <button class="opt" onclick="answer(this,'d')">B) The same WHERE clause</button>
+              <button class="opt" onclick="answer(this,'d')">C) Identical column names</button>
+              <button class="opt" onclick="answer(this,'d')">D) The same number of columns with compatible types</button>
+            </div>
+            <div class="quiz-exp">UNION requires the same number of columns and compatible data types. Column names are taken from the first SELECT — the second SELECT's names are ignored.</div>
+          </div>
+          <button class="quiz-reset" onclick="resetQuiz(this)">↺ Reset Quiz</button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end week1 -->
+
+  <!-- ══════════ WEEK 2 ══════════ -->
+  <div id="week2" class="pane">
+    <div class="sec-hdr" style="border-left-color:var(--purple);">
+      <div class="sec-num" style="background:linear-gradient(135deg,var(--purple),var(--pink));-webkit-background-clip:text;background-clip:text;">W2</div>
+      <div class="sec-info"><h2>Week 2 · Advanced SQL Techniques</h2><p>Master complex queries and analytical operations</p></div>
+    </div>
+
+    <!-- DAY 8 -->
+    <div class="day-card" id="day-8">
+      <div class="day-hdr">
+        <span class="day-badge">Day 08</span>
+        <h3 class="day-title">String Functions</h3>
+        <button class="mark-btn" onclick="markDay(8,this)">Mark Complete ✓</button>
+      </div>
+      <div class="code"><code><span class="cmt">-- Common string operations</span>
+<span class="kw">SELECT</span>
+    <span class="fn">CONCAT</span>(first_name, <span class="str">' '</span>, last_name)   <span class="kw">AS</span> full_name,
+    <span class="fn">UPPER</span>(email)                          <span class="kw">AS</span> email_upper,
+    <span class="fn">LOWER</span>(username)                       <span class="kw">AS</span> username_lower,
+    <span class="fn">TRIM</span>(bio)                              <span class="kw">AS</span> clean_bio,
+    <span class="fn">LENGTH</span>(description)                   <span class="kw">AS</span> desc_len,
+    <span class="fn">SUBSTRING</span>(phone, 1, 3)               <span class="kw">AS</span> area_code,
+    <span class="fn">LEFT</span>(name, 1)                          <span class="kw">AS</span> initial,
+    <span class="fn">REPLACE</span>(notes, <span class="str">'old'</span>, <span class="str">'new'</span>)         <span class="kw">AS</span> updated_notes,
+    <span class="fn">LOCATE</span>(<span class="str">'@'</span>, email)                    <span class="kw">AS</span> at_position
+<span class="kw">FROM</span> users;</code></div>
+      <div class="quiz-wrap">
+        <div class="quiz-toggle" onclick="toggleQuiz(this)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          🧠 Quiz — Day 8 &nbsp;<span class="score-badge" id="score-8" style="display:none"></span>
+        </div>
+        <div class="quiz-body" data-day="8">
+          <div class="quiz-q" data-ans="b">
+            <p>1. What does <code style="color:var(--cyan)">SUBSTRING('Database', 5, 4)</code> return?</p>
+            <div class="options">
+              <button class="opt" onclick="answer(this,'b')">A) 'Data'</button>
+              <button class="opt" onclick="answer(this,'b')">B) 'base'</button>
+              <button class="opt" onclick="answer(this,'b')">C) 'abas'</button>
+              <button class="opt" onclick="answer(this,'b')">D) 'ata'</button>
+            </div>
+            <div class="quiz-exp">SUBSTRING(str, start, length) — starts at position 5 (a) and takes 4 chars: 'base'. SQL string positions start at 1, not 0.</div>
+          </div>
+          <div class="quiz-q" data-ans="a">
+            <p>2. Which function removes spaces from BOTH ends of a string?</p>
+            <div class="options">
+              <button class="opt" onclick="answer(this,'a')">A) TRIM()</button>
+              <button class="opt" onclick="answer(this,'a')">B) LTRIM()</button>
+              <button class="opt" onclick="answer(this,'a')">C) RTRIM()</button>
+              <button class="opt" onclick="answer(this,'a')">D) STRIP()</button>
+            </div>
+            <div class="quiz-exp">TRIM() removes spaces from both sides. LTRIM() removes from the left only, RTRIM() from the right only. STRIP() doesn't exist in SQL.</div>
+          </div>
+          <button class="quiz-reset" onclick="resetQuiz(this)">↺ Reset Quiz</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- DAY 9 -->
+    <div class="day-card" id="day-9">
+      <div class="day-hdr">
+        <span class="day-badge">Day 09</span>
+        <h3 class="day-title">Date &amp; Time Functions</h3>
+        <button class="mark-btn" onclick="markDay(9,this)">Mark Complete ✓</button>
+      </div>
+      <div class="code"><code><span class="cmt">-- Current date/time</span>
+<span class="kw">SELECT</span> <span class="fn">NOW</span>(), <span class="fn">CURDATE</span>(), <span class="fn">CURTIME</span>();
+
+<span class="cmt">-- Arithmetic</span>
+<span class="kw">SELECT</span>
+    <span class="fn">DATE_ADD</span>(<span class="fn">NOW</span>(), <span class="kw">INTERVAL</span> 7 <span class="kw">DAY</span>)    <span class="kw">AS</span> next_week,
+    <span class="fn">DATE_SUB</span>(<span class="fn">NOW</span>(), <span class="kw">INTERVAL</span> 1 <span class="kw">MONTH</span>)  <span class="kw">AS</span> last_month,
+    <span class="fn">DATEDIFF</span>(<span class="str">'2025-01-01'</span>, <span class="fn">CURDATE</span>())   <span class="kw">AS</span> days_left;
+
+<span class="cmt">-- Extract parts</span>
+<span class="kw">SELECT</span>
+    <span class="fn">YEAR</span>(order_date)     <span class="kw">AS</span> yr,
+    <span class="fn">MONTH</span>(order_date)    <span class="kw">AS</span> mo,
+    <span class="fn">DAYNAME</span>(order_date)  <span class="kw">AS</span> day_name
+<span class="kw">FROM</span> orders;
+
+<span class="cmt">-- Format output</span>
+<span class="kw">SELECT</span> <span class="fn">DATE_FORMAT</span>(<span class="fn">NOW</span>(), <span class="str">'%Y-%m-%d %H:%i'</span>) <span class="kw">AS</span> fmt;</code></div>
+      <div class="quiz-wrap">
+        <div class="quiz-toggle" onclick="toggleQuiz(this)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          🧠 Quiz — Day 9 &nbsp;<span class="score-badge" id="score-9" style="display:none"></span>
+        </div>
+        <div class="quiz-body" data-day="9">
+          <div class="quiz-q" data-ans="c">
+            <p>1. What does <code style="color:var(--cyan)">DATEDIFF('2025-01-01', '2024-01-01')</code> return?</p>
+            <div class="options">
+              <button class="opt" onclick="answer(this,'c')">A) 12 (months)</button>
+              <button class="opt" onclick="answer(this,'c')">B) 1 (year)</button>
+              <button class="opt" onclick="answer(this,'c')">C) 366 (days)</button>
+              <button class="opt" onclick="answer(this,'c')">D) An error</button>
+            </div>
+            <div class="quiz-exp">DATEDIFF always returns the difference in DAYS. 2024 is a leap year, so 2025-01-01 minus 2024-01-01 = 366 days.</div>
+          </div>
+          <div class="quiz-q" data-ans="b">
+            <p>2. To extract only the month name from a date, use:</p>
+            <div class="options">
+              <button class="opt" onclick="answer(this,'b')">A) MONTH(date)</button>
+              <button class="opt" onclick="answer(this,'b')">B) DATE_FORMAT(date, '%M')</button>
+              <button class="opt" onclick="answer(this,'b')">C) MONTHNAME(date)</button>
+              <button class="opt" onclick="answer(this,'b')">D) Both B and C work</button>
+            </div>
+            <div class="quiz-exp">Both MONTHNAME(date) and DATE_FORMAT(date, '%M') return the full month name like "January". MONTH(date) returns the number (1-12).</div>
+          </div>
+          <button class="quiz-reset" onclick="resetQuiz(this)">↺ Reset Quiz</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- DAY 10 -->
+    <div class="day-card" id="day-10">
+      <div class="day-hdr">
+        <span class="day-badge">Day 10</span>
+        <h3 class="day-title">Numeric Functions</h3>
+        <button class="mark-btn" onclick="markDay(10,this)">Mark Complete ✓</button>
+      </div>
+      <div class="code"><code><span class="kw">SELECT</span>
+    <span class="fn">ROUND</span>(3.14159, 2)    <span class="cmt">-- 3.14</span>
+    <span class="fn">CEIL</span>(4.1),          <span class="cmt">-- 5</span>
+    <span class="fn">FLOOR</span>(4.9),         <span class="cmt">-- 4</span>
+    <span class="fn">ABS</span>(-42),           <span class="cmt">-- 42</span>
+    <span class="fn">POWER</span>(2, 10),        <span class="cmt">-- 1024</span>
+    <span class="fn">SQRT</span>(144),          <span class="cmt">-- 12</span>
+    <span class="fn">MOD</span>(17, 5),          <span class="cmt">-- 2</span>
+    <span class="fn">RAND</span>(),              <span class="cmt">-- random 0-1</span>
+    <span class="fn">GREATEST</span>(10,45,22),  <span class="cmt">-- 45</span>
+    <span class="fn">LEAST</span>(10,45,22);     <span class="cmt">-- 10</span></code></div>
+      <div class="quiz-wrap">
+        <div class="quiz-toggle" onclick="toggleQuiz(this)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          🧠 Quiz — Day 10 &nbsp;<span class="score-badge" id="score-10" style="display:none"></span>
+        </div>
+        <div class="quiz-body" data-day="10">
+          <div class="quiz-q" data-ans="b">
+            <p>1. What does <code style="color:var(--cyan)">CEIL(4.001)</code> return?</p>
+            <div class="options">
+              <button class="opt" onclick="answer(this,'b')">A) 4</button>
+              <button class="opt" onclick="answer(this,'b')">B) 5</button>
+              <button class="opt" onclick="answer(this,'b')">C) 4.001</button>
+              <button class="opt" onclick="answer(this,'b')">D) 4.1</button>
+            </div>
+            <div class="quiz-exp">CEIL (ceiling) always rounds UP to the nearest integer, regardless of how small the decimal part. 4.001 → 5.</div>
+          </div>
+          <div class="quiz-q" data-ans="d">
+            <p>2. <code style="color:var(--cyan)">MOD(23, 7)</code> returns:</p>
+            <div class="options">
+              <button class="opt" onclick="answer(this,'d')">A) 3</button>
+              <button class="opt" onclick="answer(this,'d')">B) 3.28</button>
+              <button class="opt" onclick="answer(this,'d')">C) 7</button>
+              <button class="opt" onclick="answer(this,'d')">D) 2</button>
+            </div>
+            <div class="quiz-exp">23 ÷ 7 = 3 remainder 2. MOD(23,7) = 2. Great for checking even/odd: MOD(n,2)=0 means even.</div>
+          </div>
+          <button class="quiz-reset" onclick="resetQuiz(this)">↺ Reset Quiz</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- DAY 11 -->
+    <div class="day-card" id="day-11">
+      <div class="day-hdr">
+        <span class="day-badge">Day 11</span>
+        <h3 class="day-title">Subqueries</h3>
+        <button class="mark-btn" onclick="markDay(11,this)">Mark Complete ✓</button>
+      </div>
+      <div class="code"><code><span class="cmt">-- WHERE subquery: employees above average salary</span>
+<span class="kw">SELECT</span> name, salary <span class="kw">FROM</span> employees
+<span class="kw">WHERE</span> salary &gt; (<span class="kw">SELECT</span> <span class="fn">AVG</span>(salary) <span class="kw">FROM</span> employees);
+
+<span class="cmt">-- SELECT scalar subquery</span>
+<span class="kw">SELECT</span> name, salary,
+    (<span class="kw">SELECT</span> <span class="fn">AVG</span>(salary) <span class="kw">FROM</span> employees) <span class="kw">AS</span> company_avg
+<span class="kw">FROM</span> employees;
+
+<span class="cmt">-- IN subquery</span>
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> products
+<span class="kw">WHERE</span> category_id <span class="kw">IN</span> (
+    <span class="kw">SELECT</span> id <span class="kw">FROM</span> categories <span class="kw">WHERE</span> active = 1
+);
+
+<span class="cmt">-- Correlated subquery: top earner per dept</span>
+<span class="kw">SELECT</span> e1.name, e1.department, e1.salary
+<span class="kw">FROM</span> employees e1
+<span class="kw">WHERE</span> e1.salary = (
+    <span class="kw">SELECT</span> <span class="fn">MAX</span>(e2.salary)
+    <span class="kw">FROM</span> employees e2
+    <span class="kw">WHERE</span> e2.department = e1.department  <span class="cmt">-- references outer query!</span>
+);</code></div>
+      <div class="quiz-wrap">
+        <div class="quiz-toggle" onclick="toggleQuiz(this)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          🧠 Quiz — Day 11 &nbsp;<span class="score-badge" id="score-11" style="display:none"></span>
+        </div>
+        <div class="quiz-body" data-day="11">
+          <div class="quiz-q" data-ans="c">
+            <p>1. A correlated subquery differs from a regular subquery because it:</p>
+            <div class="options">
+              <button class="opt" onclick="answer(this,'c')">A) Returns multiple columns</button>
+              <button class="opt" onclick="answer(this,'c')">B) Cannot use aggregate functions</button>
+              <button class="opt" onclick="answer(this,'c')">C) References a column from the outer query</button>
+              <button class="opt" onclick="answer(this,'c')">D) Must use the IN operator</button>
+            </div>
+            <div class="quiz-exp">A correlated subquery references columns from the outer query. It is re-executed for each row processed by the outer query, making it potentially slower but more powerful for row-by-row comparisons.</div>
+          </div>
+          <div class="quiz-q" data-ans="a">
+            <p>2. A scalar subquery must return:</p>
+            <div class="options">
+              <button class="opt" onclick="answer(this,'a')">A) Exactly one row and one column</button>
+              <button class="opt" onclick="answer(this,'a')">B) Multiple rows, one column</button>
+              <button class="opt" onclick="answer(this,'a')">C) One row, any number of columns</button>
+              <button class="opt" onclick="answer(this,'a')">D) Any number of rows and columns</button>
+            </div>
+            <div class="quiz-exp">A scalar subquery must return exactly one value (1 row × 1 column). If it returns more than one row, SQL will throw an error.</div>
+          </div>
+          <button class="quiz-reset" onclick="resetQuiz(this)">↺ Reset Quiz</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- DAY 12 -->
+    <div class="day-card" id="day-12">
+      <div class="day-hdr">
+        <span class="day-badge">Day 12</span>
+        <h3 class="day-title">PIVOT, UNPIVOT &amp; Data Transformation</h3>
+        <button class="mark-btn" onclick="markDay(12,this)">Mark Complete ✓</button>
+      </div>
+      <div class="code"><code><span class="cmt">-- PIVOT using CASE (manual, works in all databases)</span>
+<span class="kw">SELECT</span>
+    employee_id,
+    <span class="fn">SUM</span>(<span class="kw">CASE WHEN</span> month = <span class="str">'Jan'</span> <span class="kw">THEN</span> sales <span class="kw">ELSE</span> 0 <span class="kw">END</span>) <span class="kw">AS</span> Jan,
+    <span class="fn">SUM</span>(<span class="kw">CASE WHEN</span> month = <span class="str">'Feb'</span> <span class="kw">THEN</span> sales <span class="kw">ELSE</span> 0 <span class="kw">END</span>) <span class="kw">AS</span> Feb,
+    <span class="fn">SUM</span>(<span class="kw">CASE WHEN</span> month = <span class="str">'Mar'</span> <span class="kw">THEN</span> sales <span class="kw">ELSE</span> 0 <span class="kw">END</span>) <span class="kw">AS</span> Mar
+<span class="kw">FROM</span> monthly_sales
+<span class="kw">GROUP BY</span> employee_id;
+
+<span class="cmt">-- UNPIVOT using UNION ALL (columns → rows)</span>
+<span class="kw">SELECT</span> id, <span class="str">'Q1'</span> <span class="kw">AS</span> quarter, q1 <span class="kw">AS</span> revenue <span class="kw">FROM</span> quarterly
+<span class="kw">UNION ALL</span>
+<span class="kw">SELECT</span> id, <span class="str">'Q2'</span>, q2 <span class="kw">FROM</span> quarterly
+<span class="kw">UNION ALL</span>
+<span class="kw">SELECT</span> id, <span class="str">'Q3'</span>, q3 <span class="kw">FROM</span> quarterly
+<span class="kw">UNION ALL</span>
+<span class="kw">SELECT</span> id, <span class="str">'Q4'</span>, q4 <span class="kw">FROM</span> quarterly;</code></div>
+      <div class="quiz-wrap">
+        <div class="quiz-toggle" onclick="toggleQuiz(this)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          🧠 Quiz — Day 12 &nbsp;<span class="score-badge" id="score-12" style="display:none"></span>
+        </div>
+        <div class="quiz-body" data-day="12">
+          <div class="quiz-q" data-ans="b">
+            <p>1. PIVOT transforms data by:</p>
+            <div class="options">
+              <button class="opt" onclick="answer(this,'b')">A) Adding more rows to results</button>
+              <button class="opt" onclick="answer(this,'b')">B) Rotating rows into columns</button>
+              <button class="opt" onclick="answer(this,'b')">C) Combining two tables</button>
+              <button class="opt" onclick="answer(this,'b')">D) Removing NULL values</button>
+            </div>
+            <div class="quiz-exp">PIVOT rotates row values (like months) into column headers, making data wider. UNPIVOT does the opposite — turns columns back into rows.</div>
+          </div>
+          <button class="quiz-reset" onclick="resetQuiz(this)">↺ Reset Quiz</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- DAY 13 -->
+    <div class="day-card" id="day-13">
+      <div class="day-hdr">
+        <span class="day-badge">Day 13</span>
+        <h3 class="day-title">Common Table Expressions (CTEs)</h3>
+        <button class="mark-btn" onclick="markDay(13,this)">Mark Complete ✓</button>
+      </div>
+      <div class="code"><code><span class="cmt">-- Simple CTE</span>
+<span class="kw">WITH</span> high_earners <span class="kw">AS</span> (
+    <span class="kw">SELECT</span> * <span class="kw">FROM</span> employees <span class="kw">WHERE</span> salary &gt; 90000
+)
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> high_earners <span class="kw">WHERE</span> dept = <span class="str">'Eng'</span>;
+
+<span class="cmt">-- Chained CTEs</span>
+<span class="kw">WITH</span>
+  sales_totals <span class="kw">AS</span> (
+      <span class="kw">SELECT</span> emp_id, <span class="fn">SUM</span>(amount) <span class="kw">AS</span> total
+      <span class="kw">FROM</span> sales <span class="kw">GROUP BY</span> emp_id
+  ),
+  top_performers <span class="kw">AS</span> (
+      <span class="kw">SELECT</span> * <span class="kw">FROM</span> sales_totals <span class="kw">WHERE</span> total &gt; 100000
+  )
+<span class="kw">SELECT</span> e.name, tp.total
+<span class="kw">FROM</span> top_performers tp
+<span class="kw">JOIN</span> employees e <span class="kw">ON</span> tp.emp_id = e.id;
+
+<span class="cmt">-- Recursive CTE: org chart traversal</span>
+<span class="kw">WITH RECURSIVE</span> org <span class="kw">AS</span> (
+    <span class="kw">SELECT</span> id, name, manager_id, 1 <span class="kw">AS</span> lvl
+    <span class="kw">FROM</span> employees <span class="kw">WHERE</span> manager_id <span class="kw">IS NULL</span>   <span class="cmt">-- anchor</span>
+    <span class="kw">UNION ALL</span>
+    <span class="kw">SELECT</span> e.id, e.name, e.manager_id, org.lvl + 1
+    <span class="kw">FROM</span> employees e
+    <span class="kw">JOIN</span> org <span class="kw">ON</span> e.manager_id = org.id             <span class="cmt">-- recursive step</span>
+)
+<span class="kw">SELECT</span> <span class="fn">REPEAT</span>(<span class="str">'  '</span>, lvl-1), name, lvl <span class="kw">FROM</span> org;</code></div>
+      <div class="quiz-wrap">
+        <div class="quiz-toggle" onclick="toggleQuiz(this)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          🧠 Quiz — Day 13 &nbsp;<span class="score-badge" id="score-13" style="display:none"></span>
+        </div>
+        <div class="quiz-body" data-day="13">
+          <div class="quiz-q" data-ans="d">
+            <p>1. What is a major advantage of CTEs over subqueries?</p>
+            <div class="options">
+              <button class="opt" onclick="answer(this,'d')">A) CTEs are always faster</button>
+              <button class="opt" onclick="answer(this,'d')">B) CTEs can join more tables</button>
+              <button class="opt" onclick="answer(this,'d')">C) CTEs allow SELECT *</button>
+              <button class="opt" onclick="answer(this,'d')">D) CTEs are reusable and more readable within the same query</button>
+            </div>
+            <div class="quiz-exp">CTEs can be referenced multiple times in the same query and make complex logic more readable by breaking it into named, logical steps. They don't always perform faster — that's query-dependent.</div>
+          </div>
+          <div class="quiz-q" data-ans="b">
+            <p>2. A recursive CTE requires which two parts?</p>
+            <div class="options">
+              <button class="opt" onclick="answer(this,'b')">A) Two JOINs and a WHERE clause</button>
+              <button class="opt" onclick="answer(this,'b')">B) An anchor member (base case) + recursive member (UNION ALL)</button>
+              <button class="opt" onclick="answer(this,'b')">C) PARTITION BY and ORDER BY</button>
+              <button class="opt" onclick="answer(this,'b')">D) Two SELECT statements with different tables</button>
+            </div>
+            <div class="quiz-exp">A recursive CTE has two parts joined by UNION ALL: (1) the anchor member — non-recursive base case, and (2) the recursive member — references the CTE itself to traverse hierarchies.</div>
+          </div>
+          <button class="quiz-reset" onclick="resetQuiz(this)">↺ Reset Quiz</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- DAY 14 -->
+    <div class="day-card" id="day-14">
+      <div class="day-hdr">
+        <span class="day-badge">Day 14</span>
+        <h3 class="day-title">Window Functions</h3>
+        <button class="mark-btn" onclick="markDay(14,this)">Mark Complete ✓</button>
+      </div>
+      <div class="topics">
+        <div class="topic"><div class="t-ico">🏆</div><div class="t-name">Ranking</div><div class="t-desc">ROW_NUMBER, RANK, DENSE_RANK, NTILE</div></div>
+        <div class="topic"><div class="t-ico">📊</div><div class="t-name">Aggregate Windows</div><div class="t-desc">SUM, AVG, COUNT with OVER clause — no grouping!</div></div>
+        <div class="topic"><div class="t-ico">⬅️➡️</div><div class="t-name">Offset</div><div class="t-desc">LAG, LEAD, FIRST_VALUE, LAST_VALUE</div></div>
+      </div>
+      <div class="code"><code><span class="cmt">-- RANK vs DENSE_RANK (ties handling)</span>
+<span class="kw">SELECT</span> name, score,
+    <span class="fn">RANK</span>()       <span class="kw">OVER</span> (<span class="kw">ORDER BY</span> score <span class="kw">DESC</span>) <span class="kw">AS</span> rank,       <span class="cmt">-- 1,2,2,4</span>
+    <span class="fn">DENSE_RANK</span>() <span class="kw">OVER</span> (<span class="kw">ORDER BY</span> score <span class="kw">DESC</span>) <span class="kw">AS</span> dense_rank  <span class="cmt">-- 1,2,2,3</span>
+<span class="kw">FROM</span> leaderboard;
+
+<span class="cmt">-- Top N per group using PARTITION BY</span>
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> (
+    <span class="kw">SELECT</span> dept, name, salary,
+        <span class="fn">RANK</span>() <span class="kw">OVER</span> (<span class="kw">PARTITION BY</span> dept <span class="kw">ORDER BY</span> salary <span class="kw">DESC</span>) <span class="kw">AS</span> rnk
+    <span class="kw">FROM</span> employees
+) t <span class="kw">WHERE</span> rnk &lt;= 3;  <span class="cmt">-- Top 3 per department</span>
+
+<span class="cmt">-- Running total</span>
+<span class="kw">SELECT</span> order_date, amount,
+    <span class="fn">SUM</span>(amount) <span class="kw">OVER</span> (
+        <span class="kw">ORDER BY</span> order_date
+        <span class="kw">ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW</span>
+    ) <span class="kw">AS</span> running_total
+<span class="kw">FROM</span> orders;
+
+<span class="cmt">-- LAG: compare current row to previous row</span>
+<span class="kw">SELECT</span> month, revenue,
+    <span class="fn">LAG</span>(revenue,1) <span class="kw">OVER</span> (<span class="kw">ORDER BY</span> month) <span class="kw">AS</span> prev_month,
+    revenue - <span class="fn">LAG</span>(revenue,1) <span class="kw">OVER</span> (<span class="kw">ORDER BY</span> month) <span class="kw">AS</span> growth
+<span class="kw">FROM</span> monthly_revenue;</code></div>
+      <div class="callout">
+        <h4>💡 Window Function Syntax</h4>
+        <p style="font-family:'Fira Code',monospace;color:var(--cyan);font-size:.85rem;">
+          function() OVER (<br>
+          &nbsp;&nbsp;[PARTITION BY col]&nbsp;&nbsp;&nbsp;← reset per group<br>
+          &nbsp;&nbsp;[ORDER BY col]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;← sort within window<br>
+          &nbsp;&nbsp;[ROWS/RANGE BETWEEN ...]&nbsp;← frame size<br>
+          )
+        </p>
+      </div>
+      <div class="quiz-wrap">
+        <div class="quiz-toggle" onclick="toggleQuiz(this)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          🧠 Quiz — Day 14 &nbsp;<span class="score-badge" id="score-14" style="display:none"></span>
+        </div>
+        <div class="quiz-body" data-day="14">
+          <div class="quiz-q" data-ans="b">
+            <p>1. Scores are 100, 90, 90, 80. What does DENSE_RANK return for 80?</p>
+            <div class="options">
+              <button class="opt" onclick="answer(this,'b')">A) 4</button>
+              <button class="opt" onclick="answer(this,'b')">B) 3</button>
+              <button class="opt" onclick="answer(this,'b')">C) 2</button>
+              <button class="opt" onclick="answer(this,'b')">D) 1</button>
+            </div>
+            <div class="quiz-exp">DENSE_RANK doesn't skip numbers after ties. 100=1, 90=2 (tied), 90=2, 80=3. Regular RANK would give 100=1, 90=2, 90=2, 80=4 (skips 3).</div>
+          </div>
+          <div class="quiz-q" data-ans="c">
+            <p>2. LAG(salary, 1) returns:</p>
+            <div class="options">
+              <button class="opt" onclick="answer(this,'c')">A) The next row's salary</button>
+              <button class="opt" onclick="answer(this,'c')">B) Average of 1 previous salary</button>
+              <button class="opt" onclick="answer(this,'c')">C) The salary from the previous row</button>
+              <button class="opt" onclick="answer(this,'c')">D) Salary offset by 1 index</button>
+            </div>
+            <div class="quiz-exp">LAG(col, n) looks back n rows in the window. LAG(salary, 1) returns the previous row's salary. LEAD(salary, 1) would return the next row's salary.</div>
+          </div>
+          <button class="quiz-reset" onclick="resetQuiz(this)">↺ Reset Quiz</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- DAY 15 -->
+    <div class="day-card" id="day-15">
+      <div class="day-hdr">
+        <span class="day-badge">Day 15</span>
+        <h3 class="day-title">Mastery Review &amp; Best Practices</h3>
+        <button class="mark-btn" onclick="markDay(15,this)">Mark Complete ✓</button>
+      </div>
+      <div class="topics">
+        <div class="topic"><div class="t-ico">⚡</div><div class="t-name">Query Optimization</div><div class="t-desc">Use indexes, avoid SELECT *, EXPLAIN plans, sargable predicates</div></div>
+        <div class="topic"><div class="t-ico">🔒</div><div class="t-name">SQL Injection</div><div class="t-desc">Always use parameterized queries — never concatenate user input</div></div>
+        <div class="topic"><div class="t-ico">📐</div><div class="t-name">Code Quality</div><div class="t-desc">Meaningful aliases, consistent formatting, comment complex logic</div></div>
+        <div class="topic"><div class="t-ico">🎯</div><div class="t-name">ACID Properties</div><div class="t-desc">Atomicity, Consistency, Isolation, Durability — the foundation of transactions</div></div>
+      </div>
+      <div class="code"><code><span class="cmt">-- Production-grade query combining everything</span>
+<span class="kw">WITH</span> monthly_rev <span class="kw">AS</span> (
+    <span class="kw">SELECT</span>
+        <span class="fn">DATE_FORMAT</span>(created_at, <span class="str">'%Y-%m'</span>) <span class="kw">AS</span> month,
+        <span class="fn">SUM</span>(total)                          <span class="kw">AS</span> revenue
+    <span class="kw">FROM</span> orders
+    <span class="kw">WHERE</span> status = <span class="str">'completed'</span>
+    <span class="kw">GROUP BY</span> 1
+)
+<span class="kw">SELECT</span>
+    month,
+    revenue,
+    <span class="fn">LAG</span>(revenue) <span class="kw">OVER</span> (<span class="kw">ORDER BY</span> month)  <span class="kw">AS</span> prev,
+    <span class="fn">ROUND</span>(
+        100.0 * (revenue - <span class="fn">LAG</span>(revenue) <span class="kw">OVER</span> (<span class="kw">ORDER BY</span> month))
+        / <span class="fn">NULLIF</span>(<span class="fn">LAG</span>(revenue) <span class="kw">OVER</span> (<span class="kw">ORDER BY</span> month), 0),
+        2
+    ) <span class="kw">AS</span> growth_pct
+<span class="kw">FROM</span> monthly_rev <span class="kw">ORDER BY</span> month;</code></div>
+      <div class="callout">
+        <h4>🏆 SQL Mastery Checklist</h4>
+        <ul>
+          <li>✅ Complex SELECT with multi-table JOINs and UNION</li>
+          <li>✅ Aggregation with GROUP BY, HAVING, and window functions</li>
+          <li>✅ CTEs (simple and recursive) for readable queries</li>
+          <li>✅ Subqueries: scalar, correlated, IN/EXISTS</li>
+          <li>✅ String, date, and numeric function library</li>
+          <li>✅ PIVOT/UNPIVOT data transformations</li>
+          <li>✅ Query optimization: indexes, EXPLAIN, sargability</li>
+          <li>✅ Transaction management and ACID principles</li>
+        </ul>
+      </div>
+      <div class="quiz-wrap">
+        <div class="quiz-toggle" onclick="toggleQuiz(this)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          🧠 Quiz — Day 15 &nbsp;<span class="score-badge" id="score-15" style="display:none"></span>
+        </div>
+        <div class="quiz-body" data-day="15">
+          <div class="quiz-q" data-ans="a">
+            <p>1. Parameterized queries primarily prevent:</p>
+            <div class="options">
+              <button class="opt" onclick="answer(this,'a')">A) SQL Injection attacks</button>
+              <button class="opt" onclick="answer(this,'a')">B) Slow query performance</button>
+              <button class="opt" onclick="answer(this,'a')">C) NULL value errors</button>
+              <button class="opt" onclick="answer(this,'a')">D) Duplicate rows</button>
+            </div>
+            <div class="quiz-exp">Parameterized queries (prepared statements) treat user input as data, never as SQL code — eliminating SQL injection vulnerabilities. Always use them when incorporating user input.</div>
+          </div>
+          <div class="quiz-q" data-ans="c">
+            <p>2. The ACID property that ensures transactions are all-or-nothing is:</p>
+            <div class="options">
+              <button class="opt" onclick="answer(this,'c')">A) Consistency</button>
+              <button class="opt" onclick="answer(this,'c')">B) Isolation</button>
+              <button class="opt" onclick="answer(this,'c')">C) Atomicity</button>
+              <button class="opt" onclick="answer(this,'c')">D) Durability</button>
+            </div>
+            <div class="quiz-exp">Atomicity means a transaction is treated as a single unit — either ALL operations succeed (COMMIT) or ALL are rolled back (ROLLBACK). No partial execution.</div>
+          </div>
+          <button class="quiz-reset" onclick="resetQuiz(this)">↺ Reset Quiz</button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end week2 -->
+
+  <!-- ══════════ FUNCTION REFERENCE ══════════ -->
+  <div id="refs" class="pane">
+    <div class="sec-hdr" style="border-left-color:var(--yellow);">
+      <div class="sec-num" style="background:linear-gradient(135deg,var(--yellow),var(--pink));-webkit-background-clip:text;background-clip:text;">⚡</div>
+      <div class="sec-info"><h2>Function Quick Reference</h2><p>Complete MySQL function library with examples</p></div>
+    </div>
+
+    <div class="day-card">
+      <div class="day-hdr"><span class="day-badge" style="background:linear-gradient(135deg,var(--cyan),var(--green));">String</span><h3 class="day-title">String Functions</h3></div>
+      <table class="ftbl">
+        <thead><tr><th>Function</th><th>Purpose</th><th>Example → Result</th></tr></thead>
+        <tbody>
+          <tr><td><span class="fn-name">CONCAT()</span></td><td>Join strings</td><td><span class="inline-code">CONCAT('SQL',' ','Pro') → 'SQL Pro'</span></td></tr>
+          <tr><td><span class="fn-name">SUBSTRING()</span></td><td>Extract part of string</td><td><span class="inline-code">SUBSTRING('Database',1,4) → 'Data'</span></td></tr>
+          <tr><td><span class="fn-name">LEFT() / RIGHT()</span></td><td>Extract from start/end</td><td><span class="inline-code">LEFT('SQL2024',3) → 'SQL'</span></td></tr>
+          <tr><td><span class="fn-name">UPPER() / LOWER()</span></td><td>Change case</td><td><span class="inline-code">UPPER('sql') → 'SQL'</span></td></tr>
+          <tr><td><span class="fn-name">LENGTH()</span></td><td>Length in bytes</td><td><span class="inline-code">LENGTH('Hello') → 5</span></td></tr>
+          <tr><td><span class="fn-name">CHAR_LENGTH()</span></td><td>Length in characters</td><td><span class="inline-code">CHAR_LENGTH('Hello') → 5</span></td></tr>
+          <tr><td><span class="fn-name">TRIM()</span></td><td>Remove leading/trailing spaces</td><td><span class="inline-code">TRIM('  hi  ') → 'hi'</span></td></tr>
+          <tr><td><span class="fn-name">REPLACE()</span></td><td>Replace substring</td><td><span class="inline-code">REPLACE('MySQL','My','Post') → 'PostgreSQL'</span></td></tr>
+          <tr><td><span class="fn-name">LOCATE()</span></td><td>Find position of substring</td><td><span class="inline-code">LOCATE('@','a@b') → 2</span></td></tr>
+          <tr><td><span class="fn-name">REVERSE()</span></td><td>Reverse string</td><td><span class="inline-code">REVERSE('SQL') → 'LQS'</span></td></tr>
+          <tr><td><span class="fn-name">LPAD() / RPAD()</span></td><td>Pad string</td><td><span class="inline-code">LPAD('5',3,'0') → '005'</span></td></tr>
+          <tr><td><span class="fn-name">FORMAT()</span></td><td>Format number as string</td><td><span class="inline-code">FORMAT(1234567.89,2) → '1,234,567.89'</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="day-card">
+      <div class="day-hdr"><span class="day-badge" style="background:linear-gradient(135deg,var(--purple),var(--pink));">Date</span><h3 class="day-title">Date &amp; Time Functions</h3></div>
+      <table class="ftbl">
+        <thead><tr><th>Function</th><th>Purpose</th><th>Example → Result</th></tr></thead>
+        <tbody>
+          <tr><td><span class="fn-name">NOW()</span></td><td>Current datetime</td><td><span class="inline-code">NOW() → '2026-04-15 10:30:00'</span></td></tr>
+          <tr><td><span class="fn-name">CURDATE()</span></td><td>Current date</td><td><span class="inline-code">CURDATE() → '2026-04-15'</span></td></tr>
+          <tr><td><span class="fn-name">DATE_ADD()</span></td><td>Add interval</td><td><span class="inline-code">DATE_ADD(NOW(), INTERVAL 7 DAY)</span></td></tr>
+          <tr><td><span class="fn-name">DATE_SUB()</span></td><td>Subtract interval</td><td><span class="inline-code">DATE_SUB(NOW(), INTERVAL 1 MONTH)</span></td></tr>
+          <tr><td><span class="fn-name">DATEDIFF()</span></td><td>Days between dates</td><td><span class="inline-code">DATEDIFF('2025-01-01','2024-01-01') → 366</span></td></tr>
+          <tr><td><span class="fn-name">YEAR() / MONTH() / DAY()</span></td><td>Extract parts</td><td><span class="inline-code">YEAR('2026-04-15') → 2026</span></td></tr>
+          <tr><td><span class="fn-name">DATE_FORMAT()</span></td><td>Format date</td><td><span class="inline-code">DATE_FORMAT(NOW(),'%d %b %Y')</span></td></tr>
+          <tr><td><span class="fn-name">DAYNAME()</span></td><td>Weekday name</td><td><span class="inline-code">DAYNAME('2026-04-15') → 'Wednesday'</span></td></tr>
+          <tr><td><span class="fn-name">LAST_DAY()</span></td><td>Last day of month</td><td><span class="inline-code">LAST_DAY('2024-02-01') → '2024-02-29'</span></td></tr>
+          <tr><td><span class="fn-name">TIMESTAMPDIFF()</span></td><td>Diff in any unit</td><td><span class="inline-code">TIMESTAMPDIFF(MONTH,'2024-01','2025-01') → 12</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="day-card">
+      <div class="day-hdr"><span class="day-badge" style="background:linear-gradient(135deg,var(--green),var(--cyan));">Numeric</span><h3 class="day-title">Numeric Functions</h3></div>
+      <table class="ftbl">
+        <thead><tr><th>Function</th><th>Purpose</th><th>Example → Result</th></tr></thead>
+        <tbody>
+          <tr><td><span class="fn-name">ROUND(n,d)</span></td><td>Round to d decimals</td><td><span class="inline-code">ROUND(3.567,2) → 3.57</span></td></tr>
+          <tr><td><span class="fn-name">CEIL()</span></td><td>Round up</td><td><span class="inline-code">CEIL(4.1) → 5</span></td></tr>
+          <tr><td><span class="fn-name">FLOOR()</span></td><td>Round down</td><td><span class="inline-code">FLOOR(4.9) → 4</span></td></tr>
+          <tr><td><span class="fn-name">TRUNCATE(n,d)</span></td><td>Truncate decimals</td><td><span class="inline-code">TRUNCATE(3.999,2) → 3.99</span></td></tr>
+          <tr><td><span class="fn-name">ABS()</span></td><td>Absolute value</td><td><span class="inline-code">ABS(-42) → 42</span></td></tr>
+          <tr><td><span class="fn-name">POWER()</span></td><td>Exponent</td><td><span class="inline-code">POWER(2,10) → 1024</span></td></tr>
+          <tr><td><span class="fn-name">SQRT()</span></td><td>Square root</td><td><span class="inline-code">SQRT(144) → 12</span></td></tr>
+          <tr><td><span class="fn-name">MOD()</span></td><td>Modulo / remainder</td><td><span class="inline-code">MOD(17,5) → 2</span></td></tr>
+          <tr><td><span class="fn-name">RAND()</span></td><td>Random 0-1</td><td><span class="inline-code">RAND() → 0.743...</span></td></tr>
+          <tr><td><span class="fn-name">GREATEST() / LEAST()</span></td><td>Max/min from list</td><td><span class="inline-code">GREATEST(5,12,3) → 12</span></td></tr>
+          <tr><td><span class="fn-name">SIGN()</span></td><td>-1, 0, or 1</td><td><span class="inline-code">SIGN(-5) → -1</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="day-card">
+      <div class="day-hdr"><span class="day-badge" style="background:linear-gradient(135deg,var(--yellow),var(--pink));">Aggregate</span><h3 class="day-title">Aggregate &amp; Window Functions</h3></div>
+      <table class="ftbl">
+        <thead><tr><th>Function</th><th>Purpose</th><th>Window Use</th></tr></thead>
+        <tbody>
+          <tr><td><span class="fn-name">COUNT()</span></td><td>Count rows / non-NULLs</td><td><span class="inline-code">COUNT(*) OVER (PARTITION BY dept)</span></td></tr>
+          <tr><td><span class="fn-name">SUM()</span></td><td>Total numeric values</td><td><span class="inline-code">SUM(sales) OVER (ORDER BY date)</span></td></tr>
+          <tr><td><span class="fn-name">AVG()</span></td><td>Mean value</td><td><span class="inline-code">AVG(salary) OVER (PARTITION BY dept)</span></td></tr>
+          <tr><td><span class="fn-name">MAX() / MIN()</span></td><td>Extreme values</td><td><span class="inline-code">MAX(score) OVER ()</span></td></tr>
+          <tr><td><span class="fn-name">ROW_NUMBER()</span></td><td>Unique sequential rank</td><td><span class="inline-code">ROW_NUMBER() OVER (ORDER BY id)</span></td></tr>
+          <tr><td><span class="fn-name">RANK()</span></td><td>Rank with gaps on ties</td><td><span class="inline-code">RANK() OVER (ORDER BY score DESC)</span></td></tr>
+          <tr><td><span class="fn-name">DENSE_RANK()</span></td><td>Rank without gaps</td><td><span class="inline-code">DENSE_RANK() OVER (ORDER BY score DESC)</span></td></tr>
+          <tr><td><span class="fn-name">NTILE(n)</span></td><td>Divide into n buckets</td><td><span class="inline-code">NTILE(4) OVER (ORDER BY salary)</span></td></tr>
+          <tr><td><span class="fn-name">LAG()</span></td><td>Previous row value</td><td><span class="inline-code">LAG(revenue,1) OVER (ORDER BY month)</span></td></tr>
+          <tr><td><span class="fn-name">LEAD()</span></td><td>Next row value</td><td><span class="inline-code">LEAD(revenue,1) OVER (ORDER BY month)</span></td></tr>
+          <tr><td><span class="fn-name">GROUP_CONCAT()</span></td><td>Concatenate group values</td><td><span class="inline-code">GROUP_CONCAT(name SEPARATOR ', ')</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div><!-- end refs -->
+
+</div><!-- end wrap -->
+
+<script>
+// ─── STATE ───────────────────────────────────────────────
+const completedDays = new Set();
+
+const dayMeta = {
+  1:'Day 1 · Basics',2:'Day 2 · SELECT',3:'Day 3 · CRUD',4:'Day 4 · Operators',
+  5:'Day 5 · REGEXP',6:'Day 6 · Aggregates',7:'Day 7 · JOINs & UNION',
+  8:'Day 8 · Strings',9:'Day 9 · Dates',10:'Day 10 · Numbers',
+  11:'Day 11 · Subqueries',12:'Day 12 · PIVOT',13:'Day 13 · CTEs',
+  14:'Day 14 · Windows',15:'Day 15 · Mastery'
+};
+
+const dayTab = {
+  1:'week1',2:'week1',3:'week1',4:'week1',5:'week1',6:'week1',7:'week1',
+  8:'week2',9:'week2',10:'week2',11:'week2',12:'week2',13:'week2',14:'week2',15:'week2'
+};
+
+// ─── BUILD DOTS ───────────────────────────────────────────
+const grid = document.getElementById('dots-grid');
+for(let i=1;i<=15;i++){
+  const d = document.createElement('div');
+  d.className='dot'; d.id='dot-'+i;
+  d.innerHTML=`${i}<span class="dot-tip">${dayMeta[i]}</span>`;
+  d.addEventListener('click',()=>dotClick(i,d));
+  grid.appendChild(d);
+}
+
+function dotClick(i, dot){
+  if(completedDays.has(i)){
+    completedDays.delete(i);
+    dot.classList.remove('done');
+    dot.innerHTML=`${i}<span class="dot-tip">${dayMeta[i]}</span>`;
+    const btn=document.querySelector(`#day-${i} .mark-btn`);
+    if(btn){btn.textContent='Mark Complete ✓';btn.classList.remove('done');}
+  } else {
+    completedDays.add(i);
+    dot.classList.add('done');
+    dot.innerHTML=`✓<span class="dot-tip">${dayMeta[i]}</span>`;
+    const btn=document.querySelector(`#day-${i} .mark-btn`);
+    if(btn){btn.textContent='✅ Completed';btn.classList.add('done');}
+  }
+  updateProgress();
+  // jump to day
+  const tab = dayTab[i];
+  const tabBtn = [...document.querySelectorAll('.tab')].find(t=>t.getAttribute('onclick')?.includes(`'${tab}'`));
+  if(tabBtn) switchTab(tab, tabBtn);
+  setTimeout(()=>{
+    const card=document.getElementById('day-'+i);
+    if(card){
+      card.classList.add('highlight-day');
+      card.scrollIntoView({behavior:'smooth',block:'start'});
+      setTimeout(()=>card.classList.remove('highlight-day'),7000);
+    }
+  },120);
+}
+
+function markDay(i, btn){
+  const dot=document.getElementById('dot-'+i);
+  if(completedDays.has(i)){
+    completedDays.delete(i);
+    btn.textContent='Mark Complete ✓';
+    btn.classList.remove('done');
+    if(dot){dot.classList.remove('done');dot.innerHTML=`${i}<span class="dot-tip">${dayMeta[i]}</span>`;}
+  } else {
+    completedDays.add(i);
+    btn.textContent='✅ Completed';
+    btn.classList.add('done');
+    if(dot){dot.classList.add('done');dot.innerHTML=`✓<span class="dot-tip">${dayMeta[i]}</span>`;}
+  }
+  updateProgress();
+}
+
+function updateProgress(){
+  const n=completedDays.size;
+  document.getElementById('prog-fill').style.width=(n/15*100)+'%';
+  document.getElementById('prog-label').textContent=n+' / 15 complete';
+}
+
+// ─── TABS ─────────────────────────────────────────────────
+function switchTab(name, btn){
+  document.querySelectorAll('.pane').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  const p=document.getElementById(name);
+  if(p) p.classList.add('on');
+  if(btn) btn.classList.add('on');
+}
+
+// ─── QUIZ ─────────────────────────────────────────────────
+function toggleQuiz(toggle){
+  toggle.classList.toggle('open');
+  const body=toggle.nextElementSibling;
+  body.classList.toggle('open');
+}
+
+const quizAnswers = {
+  // [day][questionIndex] = correct option index (0-based)
+};
+
+function answer(btn, correctVal){
+  const q = btn.closest('.quiz-q');
+  if(q.querySelector('.opt.locked')) return; // already answered
+  const opts = q.querySelectorAll('.opt');
+  const myIdx = [...opts].indexOf(btn);
+  // which opt is correct?
+  const allOpts = [...opts];
+  // The data-ans on the parent .quiz-q tells us which letter: a,b,c,d
+  const correctLetter = q.dataset.ans;
+  const letters = ['a','b','c','d'];
+  const correctIdx = letters.indexOf(correctLetter);
+
+  opts.forEach((o,i)=>{
+    o.classList.add('locked');
+    if(i===correctIdx) o.classList.add('correct');
+    else if(o===btn && i!==correctIdx) o.classList.add('wrong');
+  });
+  const exp = q.querySelector('.quiz-exp');
+  if(exp) exp.classList.add('show');
+  updateScore(q.closest('.quiz-body'));
+}
+
+function updateScore(body){
+  const qs = body.querySelectorAll('.quiz-q');
+  const total = qs.length;
+  const answered = [...qs].filter(q=>q.querySelector('.opt.locked'));
+  const correct = [...qs].filter(q=>q.querySelector('.opt.correct.locked:not(.wrong)'));
+  // count truly correct: opted for correct
+  let rightCount=0;
+  qs.forEach(q=>{
+    const correctLetter=q.dataset.ans;
+    const letters=['a','b','c','d'];
+    const correctIdx=letters.indexOf(correctLetter);
+    const opts=q.querySelectorAll('.opt');
+    if(opts[correctIdx] && opts[correctIdx].classList.contains('locked') && !opts[correctIdx].classList.contains('wrong')){
+      // was the correct one clicked (not just revealed)
+      // actually: correct class is added to correct answer always; 
+      // but user clicked wrong button if .wrong exists on another opt in same q
+      const wrongExists=q.querySelector('.opt.wrong');
+      if(!wrongExists) rightCount++;
+    }
+  });
+  if(answered.length===total){
+    const day = body.dataset.day;
+    const badge = document.getElementById('score-'+day);
+    if(badge){
+      badge.style.display='inline-block';
+      badge.textContent=`${rightCount}/${total}`;
+      badge.className='score-badge '+(rightCount===total?'score-pass':'score-fail');
+    }
+  }
+}
+
+function resetQuiz(btn){
+  const body = btn.closest('.quiz-body');
+  body.querySelectorAll('.opt').forEach(o=>{
+    o.classList.remove('correct','wrong','locked');
+  });
+  body.querySelectorAll('.quiz-exp').forEach(e=>e.classList.remove('show'));
+  const day=body.dataset.day;
+  const badge=document.getElementById('score-'+day);
+  if(badge) badge.style.display='none';
+}
+</script>
+</body>
+</html>
