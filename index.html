@@ -75,6 +75,8 @@ h1{font-size:clamp(2.5rem,6vw,5rem);font-weight:800;line-height:1;
 .dot:hover .dot-tip{opacity:1;}
 .tracker-hint{text-align:center;font-size:.75rem;color:var(--muted);margin-top:1rem;font-family:'Fira Code',monospace;}
 
+  
+
 /* ── TABS ── */
 .tabs{display:flex;gap:.75rem;flex-wrap:wrap;margin-bottom:2.5rem;}
 .tab{background:var(--card);border:1px solid var(--border);color:var(--muted);
@@ -289,6 +291,33 @@ h1{font-size:clamp(2.5rem,6vw,5rem);font-weight:800;line-height:1;
     <button class="tab" onclick="switchTab('week2',this)">🚀 Week 2: Advanced</button>
     <button class="tab" onclick="switchTab('refs',this)">⚡ Function Ref</button>
   </div>
+
+  /* ── PROGRESS TRACKER ── */
+  <div class="srch-container" style="max-width:900px;margin:0 auto 2.5rem;position:relative;">
+  <div style="display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px 18px;box-shadow:0 0 30px rgba(0,212,255,0.05);">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="17" y1="17" x2="22" y2="22"/></svg>
+    <input id="srch-input" type="text" placeholder="search topics… JOIN, CTE, window, regex…"
+      style="flex:1;background:transparent;border:none;outline:none;font-family:'Fira Code',monospace;font-size:.9rem;color:var(--text);">
+    <button id="srch-clear" onclick="clearSearch()" style="display:none;background:none;border:none;color:var(--muted);font-size:1.2rem;cursor:pointer;padding:0;line-height:1;">×</button>
+    <span style="font-family:'Fira Code',monospace;font-size:.7rem;color:var(--muted);border:1px solid var(--border);padding:.2rem .5rem;border-radius:6px;">Enter ↵</span>
+  </div>
+  <div id="srch-results" style="margin-top:8px;display:flex;flex-direction:column;gap:6px;"></div>
+</div>
+
+<style>
+.srch-item{display:flex;align-items:center;gap:12px;padding:12px 16px;
+  background:var(--card);border:1px solid var(--border);border-radius:10px;
+  cursor:pointer;transition:all .2s;}
+.srch-item:hover{border-color:rgba(0,212,255,0.5);box-shadow:0 2px 20px rgba(0,212,255,0.08);}
+.srch-day-badge{font-family:'Fira Code',monospace;font-size:.72rem;font-weight:500;
+  background:linear-gradient(135deg,var(--cyan),var(--purple));color:#000;
+  padding:.3rem .75rem;border-radius:20px;white-space:nowrap;}
+.srch-title{font-size:.9rem;color:var(--text);flex:1;}
+.srch-tag{font-size:.75rem;color:var(--cyan);font-family:'Fira Code',monospace;}
+.srch-item mark{background:rgba(0,212,255,0.25);color:var(--cyan);border-radius:2px;padding:0 2px;}
+.srch-empty{text-align:center;font-family:'Fira Code',monospace;font-size:.82rem;
+  color:var(--muted);padding:1rem;background:var(--card);border:1px solid var(--border);border-radius:10px;}
+</style>
 
   <!-- ══════════ OVERVIEW ══════════ -->
   <div id="overview" class="pane on">
@@ -1653,6 +1682,89 @@ function resetQuiz(btn){
   const badge=document.getElementById('score-'+day);
   if(badge) badge.style.display='none';
 }
+
+  // ─── SEARCH ──────────────────────────────────────────────
+const SEARCH_INDEX = [
+  {day:1,tab:'week1',title:'What is SQL & Database Basics',tags:['sql','ddl','dml','dcl','create','table','primary key','foreign key','schema','relational']},
+  {day:2,tab:'week1',title:'SELECT Statement Mastery',tags:['select','where','order by','distinct','limit','alias','from']},
+  {day:3,tab:'week1',title:'INSERT, UPDATE, DELETE',tags:['insert','update','delete','crud','transaction','begin','rollback','commit']},
+  {day:4,tab:'week1',title:'Operators & Wildcards',tags:['like','between','in','is null','and','or','not','wildcard']},
+  {day:5,tab:'week1',title:'REGEXP — Regular Expressions',tags:['regexp','regex','pattern','email','phone','validation']},
+  {day:6,tab:'week1',title:'Aggregate Functions & GROUP BY',tags:['count','sum','avg','max','min','group by','having','group_concat','aggregate']},
+  {day:7,tab:'week1',title:'JOINs, UNION & CASE',tags:['inner join','left join','right join','full outer join','self join','union','union all','case when']},
+  {day:8,tab:'week2',title:'String Functions',tags:['concat','upper','lower','trim','length','substring','left','right','replace','locate']},
+  {day:9,tab:'week2',title:'Date & Time Functions',tags:['now','curdate','date_add','date_sub','datediff','year','month','dayname','date_format']},
+  {day:10,tab:'week2',title:'Numeric Functions',tags:['round','ceil','floor','abs','power','sqrt','mod','rand','greatest','least']},
+  {day:11,tab:'week2',title:'Subqueries',tags:['subquery','correlated','scalar','in','exists','nested']},
+  {day:12,tab:'week2',title:'PIVOT, UNPIVOT & Data Transformation',tags:['pivot','unpivot','case when','rotate','transform']},
+  {day:13,tab:'week2',title:'Common Table Expressions (CTEs)',tags:['cte','with','recursive','anchor','common table expression']},
+  {day:14,tab:'week2',title:'Window Functions',tags:['window','over','partition by','row_number','rank','dense_rank','ntile','lag','lead','running total']},
+  {day:15,tab:'week2',title:'Mastery Review & Best Practices',tags:['index','explain','sargable','injection','parameterized','acid','atomicity','optimization','nullif']},
+];
+
+const srchInput = document.getElementById('srch-input');
+const srchResults = document.getElementById('srch-results');
+const srchClear = document.getElementById('srch-clear');
+
+function hlText(str, q) {
+  const re = new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi');
+  return str.replace(re, '<mark>$1</mark>');
+}
+
+function doSearch() {
+  const q = srchInput.value.trim().toLowerCase();
+  srchClear.style.display = q ? 'block' : 'none';
+  if (!q) { srchResults.innerHTML = ''; return; }
+
+  const hits = SEARCH_INDEX.filter(d =>
+    d.title.toLowerCase().includes(q) ||
+    d.tags.some(t => t.includes(q))
+  );
+
+  if (!hits.length) {
+    srchResults.innerHTML = '<div class="srch-empty">No topics found — try "join", "cte", "window" or a function name</div>';
+    return;
+  }
+
+  srchResults.innerHTML = hits.map(h => {
+    const matchedTag = h.tags.find(t => t.includes(q) && !h.title.toLowerCase().includes(q));
+    return `
+      <div class="srch-item" onclick="jumpToDay(${h.day},'${h.tab}')">
+        <span class="srch-day-badge">Day ${String(h.day).padStart(2,'0')}</span>
+        <span class="srch-title">${hlText(h.title, srchInput.value.trim())}</span>
+        ${matchedTag ? `<span class="srch-tag">${hlText(matchedTag, srchInput.value.trim())}</span>` : ''}
+      </div>`;
+  }).join('');
+}
+
+function jumpToDay(day, tab) {
+  const tabBtn = [...document.querySelectorAll('.tab')].find(t => t.getAttribute('onclick')?.includes(`'${tab}'`));
+  switchTab(tab, tabBtn);
+  setTimeout(() => {
+    const card = document.getElementById('day-' + day);
+    if (card) {
+      card.classList.add('highlight-day');
+      card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      setTimeout(() => card.classList.remove('highlight-day'), 7000);
+    }
+  }, 120);
+  srchResults.innerHTML = '';
+  srchInput.value = '';
+  srchClear.style.display = 'none';
+}
+
+function clearSearch() {
+  srchInput.value = '';
+  srchResults.innerHTML = '';
+  srchClear.style.display = 'none';
+  srchInput.focus();
+}
+
+srchInput.addEventListener('input', doSearch);
+srchInput.addEventListener('keydown', e => {
+  if (e.key === 'Escape') clearSearch();
+  if (e.key === 'Enter') { const first = srchResults.querySelector('.srch-item'); if (first) first.click(); }
+});
 </script>
 </body>
 </html>
